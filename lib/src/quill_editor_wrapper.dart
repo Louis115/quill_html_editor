@@ -159,6 +159,8 @@ class QuillHtmlEditor extends StatefulWidget {
 
 ///[QuillHtmlEditorState] editor state class to render the editor
 class QuillHtmlEditorState extends State<QuillHtmlEditor> {
+  final Completer<void> _editorReadyCompleter = Completer<void>();
+
   /// it is the controller used to access the functions of quill js library
   late WebViewXController _webviewController;
 
@@ -195,34 +197,38 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
   }
 
   @override
+  @override
   Widget build(BuildContext context) {
     return FutureBuilder(
-        future: _loadScripts,
-        builder: (context, snap) {
-          if (snap.hasData) {
-            _quillJsScript = snap.data!;
-          }
-          if (snap.connectionState == ConnectionState.done) {
-            return LayoutBuilder(builder: (context, constraints) {
-              _initialContent = _getQuillPage(width: constraints.maxWidth);
-              return _buildEditorView(
-                  context: context, width: constraints.maxWidth);
-            });
-          }
-
-          if (widget.loadingBuilder != null) {
-            return widget.loadingBuilder!(context);
-          } else {
-            return SizedBox(
-              height: widget.minHeight,
-              child: const Center(
-                child: CircularProgressIndicator(
-                  strokeWidth: 0.3,
-                ),
-              ),
+      future: _loadScripts,
+      builder: (context, snap) {
+        if (snap.hasData) {
+          _quillJsScript = snap.data!;
+        }
+        if (snap.connectionState == ConnectionState.done) {
+          return LayoutBuilder(builder: (context, constraints) {
+            _initialContent = _getQuillPage(width: constraints.maxWidth);
+            return _buildEditorView(
+              context: context,
+              width: constraints.maxWidth,
             );
-          }
-        });
+          });
+        }
+
+        if (widget.loadingBuilder != null) {
+          return widget.loadingBuilder!(context);
+        } else {
+          return SizedBox(
+            height: widget.minHeight,
+            child: const Center(
+              child: CircularProgressIndicator(
+                strokeWidth: 0.3,
+              ),
+            ),
+          );
+        }
+      },
+    );
   }
 
   Widget _buildEditorView(
@@ -244,7 +250,6 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
           onPageFinished: (src) {
             Future.delayed(const Duration(milliseconds: 100)).then((value) {
               _editorLoaded = true;
-              debugPrint('_editorLoaded $_editorLoaded');
               if (mounted) {
                 setState(() {});
               }
@@ -255,13 +260,21 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
               if (widget.autoFocus == true) {
                 widget.controller.focus();
               }
-              if (widget.onEditorCreated != null) {
-                widget.onEditorCreated!();
-              }
+              widget.controller.markEditorReady(); // Mark editor as ready
               widget.controller._editorLoadedController?.add('');
             });
           },
           dartCallBacks: {
+            DartCallback(
+              name: 'EditorLoaded',
+              callBack: (map) {
+                _editorLoaded = true;
+                if (mounted) {
+                  setState(() {});
+                }
+                widget.controller.markEditorReady(); // Mark editor as ready
+              },
+            ),
             DartCallback(
                 name: 'EditorResizeCallback',
                 callBack: (height) {
@@ -309,7 +322,7 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
                     if (widget.controller._changeController != null) {
                       String finalText = "";
                       String parsedText =
-                          QuillEditorController._stripHtmlIfNeeded(map);
+                          map; // No need to strip HTML tags here.
                       if (parsedText.trim() == "") {
                         finalText = "";
                       } else {
@@ -326,6 +339,7 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
                     }
                   }
                 }),
+
             DartCallback(
                 name: 'FocusChanged',
                 callBack: (map) {
@@ -414,17 +428,18 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
           ),
         ),
         Visibility(
-            visible: !_editorLoaded,
-            child: widget.loadingBuilder != null
-                ? widget.loadingBuilder!(context)
-                : SizedBox(
-                    height: widget.minHeight,
-                    child: const Center(
-                      child: CircularProgressIndicator(
-                        strokeWidth: 0.3,
-                      ),
+          visible: !_editorLoaded,
+          child: widget.loadingBuilder != null
+              ? widget.loadingBuilder!(context)
+              : SizedBox(
+                  height: widget.minHeight,
+                  child: const Center(
+                    child: CircularProgressIndicator(
+                      strokeWidth: 0.3,
                     ),
-                  ))
+                  ),
+                ),
+        ),
       ],
     );
   }
@@ -1289,6 +1304,7 @@ class QuillEditorController {
   GlobalKey<ToolBarState>? _toolBarKey;
   StreamController<String>? _changeController;
   StreamController<String>? _editorLoadedController;
+  final Completer<void> _editorReadyCompleter = Completer<void>();
 
   ///[isEnable] to enable/disable editor
   bool isEnable = true;
@@ -1306,8 +1322,16 @@ class QuillEditorController {
     _editorLoadedController = StreamController<String>();
   }
 
+  Future<void> get editorReady => _editorReadyCompleter.future;
+
   /// to access toolbar key from toolbar widget
   GlobalKey<ToolBarState>? get toolBarKey => _toolBarKey;
+
+  void markEditorReady() {
+    if (!_editorReadyCompleter.isCompleted) {
+      _editorReadyCompleter.complete();
+    }
+  }
 
   /// [getText] method is used to get the html string from the editor
   /// To avoid getting empty html tags, we are validating the html string
@@ -1538,7 +1562,8 @@ class QuillEditorController {
 
   /// it is a regex method to remove the tags and replace them with empty space
   static String _stripHtmlIfNeeded(String text) {
-    return text.replaceAll(RegExp(r'<[^>]*>|&[^;]+;'), ' ');
+    // Only remove tags that are not <img> to preserve image tags.
+    return text.replaceAll(RegExp(r'<(?!img)([^>]+)>'), ' ');
   }
 
   ///  [undo] method to undo the changes in editor
