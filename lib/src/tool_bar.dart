@@ -1400,4 +1400,5 @@ enum ToolBarStyle {
     [{ 'align': [] }],
 
     ['clean']
+    louis_tool bar
  ***/
