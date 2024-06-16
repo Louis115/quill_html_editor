@@ -814,34 +814,32 @@ class ToolBarState extends State<ToolBar> {
           alignedDropdown: true,
           padding: EdgeInsets.zero,
           child: DropdownButton(
-              dropdownColor: widget.toolBarColor,
-              alignment: Alignment.centerLeft,
-              selectedItemBuilder: (context) {
-                return [
-                  _fontSelectionTextItem(type: 'Small'),
-                  _fontSelectionTextItem(type: 'Normal'),
-                  _fontSelectionTextItem(type: 'Large'),
-                  _fontSelectionTextItem(type: 'Huge'),
-                  _fontSelectionTextItem(type: 'Louis'),
-                ];
-              },
-              isDense: true,
-              value: _formatMap['size'] ?? 'normal',
-              style: TextStyle(fontSize: 12, color: widget.iconColor!),
-              items: [
-                _fontSizeItem(type: 'Small', fontSize: 8),
-                _fontSizeItem(type: 'Normal', fontSize: 12),
-                _fontSizeItem(type: 'Large', fontSize: 16),
-                _fontSizeItem(type: 'Huge', fontSize: 20),
-                _fontSizeItem(type: 'Louis', fontSize: 24),
-              ], //need rebuild to see changes
-              onChanged: (value) {
-                print("Selected font size: $value");
-                _formatMap['size'] = value;
-                widget.controller.setFormat(
-                    format: 'size', value: value == 'normal' ? '' : value);
-                setState(() {});
-              }),
+            dropdownColor: widget.toolBarColor,
+            alignment: Alignment.centerLeft,
+            selectedItemBuilder: (context) {
+              return List<Widget>.generate(65, (index) {
+                final size = index + 8;
+                return _fontSelectionTextItem(type: size.toString());
+              });
+            },
+            isDense: true,
+            value: _formatMap['size'] ?? 'normal',
+            style: TextStyle(fontSize: 12, color: widget.iconColor!),
+            items: List<DropdownMenuItem>.generate(65, (index) {
+              final size = index + 8;
+              return _fontSizeItem(
+                  type: size.toString(), fontSize: size.toDouble());
+            }),
+            onChanged: (value) {
+              print("Selected font size: $value");
+              _formatMap['size'] = value;
+              widget.controller.setFormat(
+                format: 'size',
+                value: value == 'normal' ? '' : value,
+              );
+              setState(() {});
+            },
+          ),
         ),
       ),
     );
@@ -850,29 +848,36 @@ class ToolBarState extends State<ToolBar> {
   DropdownMenuItem _fontSizeItem(
       {required String type, required double fontSize}) {
     return DropdownMenuItem(
-        value: type.toLowerCase(),
-        child: WebViewAware(
-          child: Text(type,
-              style: TextStyle(
-                  fontSize: fontSize,
-                  color: _formatMap['size'] == type.toLowerCase()
-                      ? widget.activeIconColor
-                      : widget.iconColor!,
-                  fontWeight: FontWeight.bold)),
-        ));
+      value: type,
+      child: WebViewAware(
+        child: Text(
+          type,
+          style: TextStyle(
+            fontSize: fontSize,
+            color: _formatMap['size'] == type
+                ? widget.activeIconColor
+                : widget.iconColor!,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _fontSelectionTextItem({
     required String type,
   }) {
     return SizedBox(
-      child: Text(type,
-          style: TextStyle(
-              fontSize: 14,
-              color: type.toLowerCase() != 'normal'
-                  ? widget.activeIconColor
-                  : widget.iconColor!,
-              fontWeight: FontWeight.bold)),
+      child: Text(
+        type,
+        style: TextStyle(
+          fontSize: 14,
+          color: type.toLowerCase() != 'normal'
+              ? widget.activeIconColor
+              : widget.iconColor!,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
     );
   }
 
