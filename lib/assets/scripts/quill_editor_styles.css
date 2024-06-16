@@ -524,7 +524,7 @@
 .ql-size-52 { font-size: 52px; }
 .ql-size-53 { font-size: 53px; }
 .ql-size-54 { font-size: 54px; }
-.ql-editor.ql-size-55 { font-size: 55px; }
+.ql-editor.ql-size-55 { font-size: .75em; }
 .ql-size-56 { font-size: 56px; }
 .ql-size-57 { font-size: 57px; }
 .ql-size-58 { font-size: 58px; }
@@ -1107,6 +1107,11 @@
 .ql-snow .ql-picker.ql-size .ql-picker-item[data-value=huge]::before,
 .ql-snow .ql-picker.ql-size .ql-picker-label[data-value=huge]::before {
 	content: 'Huge'
+}
+
+.ql-snow .ql-picker.ql-size .ql-picker-item[data-value=louis]::before,
+.ql-snow .ql- .ql-size .ql-picker-label[data-value=louis]::before {
+	content: 'Louis'
 }
 
 .ql-snow .ql-picker.ql-size .ql-picker-item[data-value=small]::before {

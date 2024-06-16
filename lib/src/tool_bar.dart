@@ -813,82 +813,53 @@ class ToolBarState extends State<ToolBar> {
         child: ButtonTheme(
           alignedDropdown: true,
           padding: EdgeInsets.zero,
-          child: DropdownButton<String>(
-            dropdownColor: widget.toolBarColor,
-            alignment: Alignment.centerLeft,
-            selectedItemBuilder: (context) {
-              return [
-                _fontSelectionTextItem(type: 'Small'),
-                _fontSelectionTextItem(type: 'Normal'),
-                _fontSelectionTextItem(type: 'Large'),
-                _fontSelectionTextItem(type: 'Huge'),
-                _fontSelectionTextItem(type: 'Louis'),
-              ];
-            },
-            isDense: true,
-            value: _formatMap['size'] ?? 'Normal',
-            style: TextStyle(fontSize: 12, color: widget.iconColor!),
-            items: [
-              _fontSizeItem(type: 'Small', fontSize: 8),
-              _fontSizeItem(type: 'Normal', fontSize: 12),
-              _fontSizeItem(type: 'Large', fontSize: 16),
-              _fontSizeItem(type: 'Huge', fontSize: 20),
-              _fontSizeItem(type: 'Louis', fontSize: 50),
-            ], // need rebuild to see changes
-            onChanged: (value) {
-              _formatMap['size'] = value;
-              String fontSizeValue =
-                  value == 'Normal' ? '' : _mapFontSize(value);
-              widget.controller.setFormat(
-                format: 'size',
-                value: fontSizeValue,
-              );
-              print("Selected font size: $value , actual size: $fontSizeValue");
-
-              // Additional debug print statements
-              print("Setting format: size = $fontSizeValue");
-              setState(() {});
-            },
-          ),
+          child: DropdownButton(
+              dropdownColor: widget.toolBarColor,
+              alignment: Alignment.centerLeft,
+              selectedItemBuilder: (context) {
+                return [
+                  _fontSelectionTextItem(type: 'Small'),
+                  _fontSelectionTextItem(type: 'Normal'),
+                  _fontSelectionTextItem(type: 'Large'),
+                  _fontSelectionTextItem(type: 'Huge'),
+                  _fontSelectionTextItem(type: 'Louis'),
+                ];
+              },
+              isDense: true,
+              value: _formatMap['size'] ?? 'normal',
+              style: TextStyle(fontSize: 12, color: widget.iconColor!),
+              items: [
+                _fontSizeItem(type: 'Small', fontSize: 8),
+                _fontSizeItem(type: 'Normal', fontSize: 12),
+                _fontSizeItem(type: 'Large', fontSize: 16),
+                _fontSizeItem(type: 'Huge', fontSize: 20),
+                _fontSizeItem(type: 'Louis', fontSize: 24),
+              ], //need rebuild to see changes
+              onChanged: (value) {
+                print("Selected font size: $value");
+                _formatMap['size'] = value;
+                widget.controller.setFormat(
+                    format: 'size', value: value == 'normal' ? '' : value);
+                setState(() {});
+              }),
         ),
       ),
     );
   }
 
-  dynamic _mapFontSize(String? value) {
-    switch (value) {
-      case 'Small':
-        return '10px';
-      case 'Normal':
-        return '13px';
-      case 'Large':
-        return '18px';
-      case 'Huge':
-        return '32px';
-      case 'Louis':
-        return '40px'; // Custom size mapping
-      default:
-        return '13px';
-    }
-  }
-
-  DropdownMenuItem<String> _fontSizeItem(
+  DropdownMenuItem _fontSizeItem(
       {required String type, required double fontSize}) {
-    return DropdownMenuItem<String>(
-      value: type,
-      child: WebViewAware(
-        child: Text(
-          type,
-          style: TextStyle(
-            fontSize: fontSize,
-            color: _formatMap['size'] == type
-                ? widget.activeIconColor
-                : widget.iconColor!,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
-    );
+    return DropdownMenuItem(
+        value: type.toLowerCase(),
+        child: WebViewAware(
+          child: Text(type,
+              style: TextStyle(
+                  fontSize: fontSize,
+                  color: _formatMap['size'] == type.toLowerCase()
+                      ? widget.activeIconColor
+                      : widget.iconColor!,
+                  fontWeight: FontWeight.bold)),
+        ));
   }
 
   Widget _fontSelectionTextItem({
