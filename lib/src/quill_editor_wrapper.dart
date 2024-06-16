@@ -178,6 +178,12 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
   late String _fontFamily;
   late String _encodedStyle;
   bool _editorLoaded = false;
+
+  /// Insert an image that can be resized
+  ///
+  /// [base64Image] is the base64 representation of the image to be inserted.
+  //image resizer function
+
   @override
   initState() {
     _loadScripts = rootBundle.loadString(
@@ -188,6 +194,7 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
     _currentHeight = widget.minHeight;
 
     super.initState();
+    widget.controller._setEditorState(this);
   }
 
   @override
@@ -196,7 +203,15 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
     super.dispose();
   }
 
-  @override
+  Future<void> insertResizableImage(String base64Image) async {
+    final imageHtml = '''
+      <div contenteditable="false">
+        <img src="data:image/png;base64,$base64Image" style="width:200px;height:200px;" class="resizable-image">
+      </div>
+    ''';
+    await _webviewController.callJsMethod("insertHtmlText", [imageHtml]);
+  }
+
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
@@ -585,6 +600,68 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
        <!-- Include the Quill library --> 
         <script>
         $_quillJsScript
+
+        function makeImagesResizable() {
+        const images = document.querySelectorAll('.resizable-image');
+        images.forEach(image => {
+          if (!image.querySelector('.resize-handle')) {
+            ['top-left', 'top-right', 'bottom-left', 'bottom-right'].forEach(position => {
+              const handle = document.createElement('div');
+              handle.classList.add('resize-handle', position);
+              handle.addEventListener('mousedown', startResize);
+              image.appendChild(handle);
+            });
+          }
+        });
+      }
+
+        function startResize(event) {
+          const handle = event.target;
+          const image = handle.parentElement.querySelector('img');
+          const rect = image.getBoundingClientRect();
+
+        function resize(event) {
+          const dx = event.clientX - rect.left;
+          const dy = event.clientY - rect.top;
+          if (handle.classList.contains('bottom-right')) {
+            image.style.width = `\${dx}px`;
+            image.style.height = `\${dy}px`;
+          } else if (handle.classList.contains('bottom-left')) {
+            image.style.width = `\${rect.width - dx}px`;
+            image.style.height = `\${dy}px`;
+          } else if (handle.classList.contains('top-right')) {
+            image.style.width = `\${dx}px`;
+            image.style.height = `\${rect.height - dy}px`;
+          } else if (handle.classList.contains('top-left')) {
+            image.style.width = `\${rect.width - dx}px`;
+            image.style.height = `\${rect.height - dy}px`;
+          }
+        }
+
+        function stopResize() {
+          document.removeEventListener('mousemove', resize);
+          document.removeEventListener('mouseup', stopResize);
+        }
+
+        document.addEventListener('mousemove', resize);
+        document.addEventListener('mouseup', stopResize);
+      }
+
+      const quillEditor = new Quill('#editor-container', {
+        modules: {
+          toolbar: '#toolbar-container',
+          history: { delay: 2000, maxStack: 500, userOnly: false }
+        },
+        theme: 'snow'
+      });
+
+      quillEditor.on('text-change', () => {
+        makeImagesResizable();
+      });
+
+      makeImagesResizable();
+   
+
         </script>
         <style>
         /*!
@@ -600,6 +677,27 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
         background-color:${widget.backgroundColor.toRGBA()};
         color: ${widget.backgroundColor.toRGBA()};
         }
+
+        /* ----- image resizer ----- */
+        .resizable-image {
+        position: relative;
+        display: inline-block;
+        }
+
+        .resizable-image .resize-handle {
+          position: absolute;
+          width: 10px;
+          height: 10px;
+          background-color: blue;
+          cursor: nwse-resize;
+        }
+        .resizable-image .top-left { top: 0; left: 0; }
+        .resizable-image .top-right { top: 0; right: 0; }
+        .resizable-image .bottom-left { bottom: 0; left: 0; }
+        .resizable-image .bottom-right { bottom: 0; right: 0; }
+
+        /* ----- image resizer ----- */
+
         .ql-font-roboto {
            font-family: '$_fontFamily', sans-serif;
           }
@@ -1307,6 +1405,7 @@ class QuillEditorController {
   StreamController<String>? _changeController;
   StreamController<String>? _editorLoadedController;
   final Completer<void> _editorReadyCompleter = Completer<void>();
+  QuillHtmlEditorState? _editorState;
 
   ///[isEnable] to enable/disable editor
   bool isEnable = true;
@@ -1326,6 +1425,14 @@ class QuillEditorController {
 
   Future<void> get editorReady => _editorReadyCompleter.future;
 
+  void _setEditorState(QuillHtmlEditorState state) {
+    _editorState = state;
+  }
+
+  Future<void> insertResizableImage(String base64Image) async {
+    _editorState?.insertResizableImage(base64Image);
+  }
+
   /// to access toolbar key from toolbar widget
   GlobalKey<ToolBarState>? get toolBarKey => _toolBarKey;
 
@@ -1333,6 +1440,15 @@ class QuillEditorController {
     if (!_editorReadyCompleter.isCompleted) {
       _editorReadyCompleter.complete();
     }
+  }
+
+  void enableEditor(bool isEnabled) {
+    _editorState?._webviewController
+        .callJsMethod(isEnabled ? "enableEditor" : "disableEditor", []);
+  }
+
+  void focus() {
+    _editorState?._webviewController.callJsMethod("focus", []);
   }
 
   /// [getText] method is used to get the html string from the editor
@@ -1395,15 +1511,6 @@ class QuillEditorController {
     return jsonDecode(text.toString());
   }
 
-  /// Requests focus for the editor.
-  ///
-  /// The [focus] method is used to request focus for the editor,
-  /// bringing it into the active input state.
-  ///
-  Future focus() async {
-    return await _editorKey?.currentState?._requestFocus();
-  }
-
   /// Inserts a table into the editor.
   ///
   /// The [insertTable] method is used to insert a table into the editor
@@ -1464,15 +1571,6 @@ class QuillEditorController {
   /// [embedImage] method is used to insert image to the editor
   Future embedImage(String imgSrc) async {
     return await _editorKey?.currentState?._embedImage(imgSrc: imgSrc);
-  }
-
-  /// [enableEditor] method is used to enable/ disable the editor,
-  /// while, we can enable or disable the editor directly by passing isEnabled to the widget,
-  /// this is an additional function that can be used to do the same with the state key
-  /// We can choose either of these ways to enable/disable
-  void enableEditor(bool enable) async {
-    isEnable = enable;
-    await _editorKey?.currentState?._enableTextEditor(isEnabled: enable);
   }
 
   @Deprecated(

@@ -698,7 +698,8 @@ class ToolBarState extends State<ToolBar> {
                 } else if (toolbarItem.style == ToolBarStyle.image) {
                   await ImageSelector(onImagePicked: (value) {
                     _formatMap['image'] = value;
-                    widget.controller.embedImage(value);
+                    widget.controller
+                        .insertResizableImage(value); // Use the new method
                   }).pickFiles();
                 } else if (toolbarItem.style == ToolBarStyle.clean) {
                   List<ToolBarItem> tempList = [];
