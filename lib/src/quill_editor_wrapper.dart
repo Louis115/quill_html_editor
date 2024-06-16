@@ -520,10 +520,11 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
   /// a private method to enable/disable the editor
   Future _setFormat({required String format, required dynamic value}) async {
     try {
+      debugPrint('Calling JS setFormat with format: $format, value: $value');
       return await _webviewController
           .callJsMethod("setFormat", [format, value]);
     } catch (e) {
-      _printWrapper(false, e.toString());
+      debugPrint('Error in setFormat: $e');
     }
   }
 
@@ -1284,6 +1285,7 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
                     quilleditor.format('clean');
                   }
                 } else {
+                console.log('JS setFormat called with format:', format, 'value:', value);
                   quilleditor.format(format, value);
                 }
               } catch (e) {
@@ -1511,6 +1513,7 @@ class QuillEditorController {
 
   ///[setFormat]  sets the format to editor either by selection or by cursor position
   void setFormat({required String format, required dynamic value}) async {
+    debugPrint('setFormat called with format: $format, value: $value');
     _editorKey?.currentState?._setFormat(format: format, value: value);
   }
 

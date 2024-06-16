@@ -1128,6 +1128,9 @@
 .ql-snow .ql-picker.ql-size .ql-picker-item[data-value=huge]::before {
 	font-size: 32px
 }
+.ql-snow .ql-picker.ql-size .ql-picker-item[data-value=louis]::before {
+	font-size: 40px
+}
 
 .ql-snow .ql-color-picker.ql-background .ql-picker-item {
 	background-color: #fff
