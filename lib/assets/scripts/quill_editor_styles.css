@@ -544,14 +544,14 @@
 .ql-size-72 { font-size: 72px; } */ 
 
 /* ------------------------------------------------- */
-
+.ql-editor.ql-size-55 { font-size: .75em; }
 
 .ql-editor .ql-size-small {
-	font-size: 15em
+	font-size: .75em
 }
 
 .ql-editor .ql-size-large {
-	font-size: 3.5em
+	font-size: 1.5em
 }
 
 .ql-editor .ql-size-huge {
@@ -559,7 +559,7 @@
 }
 
 .ql-editor .ql-size-louis {
-	font-size: .75em
+	font-size: 72px
 }
 
 .ql-editor .ql-direction-rtl {
