@@ -526,7 +526,7 @@
 .ql-size-54 { font-size: 54px; }
 .ql-editor.ql-size-55 { font-size: .75em; }
 /* .ql-size-56 { font-size: 56px; } */
-.ql-size-57 { font-size: 57px; }
+/* .ql-size-57 { font-size: 57px; }
 .ql-size-58 { font-size: 58px; }
 .ql-size-59 { font-size: 59px; }
 .ql-size-60 { font-size: 60px; }
@@ -541,7 +541,7 @@
 .ql-size-69 { font-size: 69px; }
 .ql-size-70 { font-size: 70px; }
 .ql-size-71 { font-size: 71px; }
-.ql-size-72 { font-size: 72px; } */
+.ql-size-72 { font-size: 72px; } */ 
 
 /* ------------------------------------------------- */
 
@@ -559,7 +559,7 @@
 }
 
 .ql-editor .ql-size-louis {
-	font-size: 3.0em
+	font-size: 3.5em
 }
 
 .ql-editor .ql-direction-rtl {
