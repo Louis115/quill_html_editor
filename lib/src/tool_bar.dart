@@ -1404,5 +1404,5 @@ enum ToolBarStyle {
     [{ 'align': [] }],
 
     ['clean']
-    louis_tool bar
+    keep this as safe version, fix color typing, image resize left only!
  ***/
