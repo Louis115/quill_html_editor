@@ -823,6 +823,7 @@ class ToolBarState extends State<ToolBar> {
                   _fontSelectionTextItem(type: 'Large'),
                   _fontSelectionTextItem(type: 'Huge'),
                   _fontSelectionTextItem(type: 'Louis'),
+                  _fontSelectionTextItem(type: '55'),
                 ];
               },
               isDense: true,
@@ -834,6 +835,7 @@ class ToolBarState extends State<ToolBar> {
                 _fontSizeItem(type: 'Large', fontSize: 16),
                 _fontSizeItem(type: 'Huge', fontSize: 20),
                 _fontSizeItem(type: 'Louis', fontSize: 24),
+                _fontSizeItem(type: '55', fontSize: 24),
               ], //need rebuild to see changes
               onChanged: (value) {
                 print("Selected font size: $value");
