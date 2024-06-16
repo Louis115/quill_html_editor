@@ -579,7 +579,8 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
         <head>
         <link href="https://fonts.googleapis.com/css?family=$_encodedStyle:400,400i,700,700i" rel="stylesheet">
         <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1">    
-        <link rel="stylesheet" type="text/css" href="lib/custom_code/quill_html_editor/lib/assets/scripts/quill_editor_styles.css">       <!-- Include the Quill library --> 
+        
+       <!-- Include the Quill library --> 
         <script>
         $_quillJsScript
         </script>
@@ -589,7 +590,7 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
        * https://quilljs.com/
        * Copyright (c) 2014, Jason Chen
        * Copyright (c) 2013, salesforce.com
-       
+       */
         body, html{
          font-family: "$_fontFamily", sans-serif !important;
         -webkit-user-select: text !important;
