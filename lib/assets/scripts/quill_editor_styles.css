@@ -474,6 +474,77 @@
 	font-family: Monaco, Courier New, monospace
 }
 
+/* ------------------------------------------------- */
+
+/* Add these styles to your quill_editor_styles.css file */
+.ql-size-8 { font-size: 8px; }
+.ql-size-9 { font-size: 9px; }
+.ql-size-10 { font-size: 10px; }
+.ql-size-11 { font-size: 11px; }
+.ql-size-12 { font-size: 12px; }
+.ql-size-13 { font-size: 13px; }
+.ql-size-14 { font-size: 14px; }
+.ql-size-15 { font-size: 15px; }
+.ql-size-16 { font-size: 16px; }
+.ql-size-17 { font-size: 17px; }
+.ql-size-18 { font-size: 18px; }
+.ql-size-19 { font-size: 19px; }
+.ql-size-20 { font-size: 20px; }
+.ql-size-21 { font-size: 21px; }
+.ql-size-22 { font-size: 22px; }
+.ql-size-23 { font-size: 23px; }
+.ql-size-24 { font-size: 24px; }
+.ql-size-25 { font-size: 25px; }
+.ql-size-26 { font-size: 26px; }
+.ql-size-27 { font-size: 27px; }
+.ql-size-28 { font-size: 28px; }
+.ql-size-29 { font-size: 29px; }
+.ql-size-30 { font-size: 30px; }
+.ql-size-31 { font-size: 31px; }
+.ql-size-32 { font-size: 32px; }
+.ql-size-33 { font-size: 33px; }
+.ql-size-34 { font-size: 34px; }
+.ql-size-35 { font-size: 35px; }
+.ql-size-36 { font-size: 36px; }
+.ql-size-37 { font-size: 37px; }
+.ql-size-38 { font-size: 38px; }
+.ql-size-39 { font-size: 39px; }
+.ql-size-40 { font-size: 40px; }
+.ql-size-41 { font-size: 41px; }
+.ql-size-42 { font-size: 42px; }
+.ql-size-43 { font-size: 43px; }
+.ql-size-44 { font-size: 44px; }
+.ql-size-45 { font-size: 45px; }
+.ql-size-46 { font-size: 46px; }
+.ql-size-47 { font-size: 47px; }
+.ql-size-48 { font-size: 48px; }
+.ql-size-49 { font-size: 49px; }
+.ql-size-50 { font-size: 50px; }
+.ql-size-51 { font-size: 51px; }
+.ql-size-52 { font-size: 52px; }
+.ql-size-53 { font-size: 53px; }
+.ql-size-54 { font-size: 54px; }
+.ql-size-55 { font-size: 55px; }
+.ql-size-56 { font-size: 56px; }
+.ql-size-57 { font-size: 57px; }
+.ql-size-58 { font-size: 58px; }
+.ql-size-59 { font-size: 59px; }
+.ql-size-60 { font-size: 60px; }
+.ql-size-61 { font-size: 61px; }
+.ql-size-62 { font-size: 62px; }
+.ql-size-63 { font-size: 63px; }
+.ql-size-64 { font-size: 64px; }
+.ql-size-65 { font-size: 65px; }
+.ql-size-66 { font-size: 66px; }
+.ql-size-67 { font-size: 67px; }
+.ql-size-68 { font-size: 68px; }
+.ql-size-69 { font-size: 69px; }
+.ql-size-70 { font-size: 70px; }
+.ql-size-71 { font-size: 71px; }
+.ql-size-72 { font-size: 72px; }
+
+/* ------------------------------------------------- */
+
 .ql-editor .ql-size-small {
 	font-size: .75em
 }

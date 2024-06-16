@@ -833,7 +833,7 @@ class ToolBarState extends State<ToolBar> {
               _fontSizeItem(type: 'Normal', fontSize: 12),
               _fontSizeItem(type: 'Large', fontSize: 16),
               _fontSizeItem(type: 'Huge', fontSize: 20),
-              _fontSizeItem(type: 'Louis', fontSize: 24),
+              _fontSizeItem(type: 'Louis', fontSize: 50),
             ], // need rebuild to see changes
             onChanged: (value) {
               _formatMap['size'] = value;
