@@ -579,7 +579,8 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
         <head>
         <link href="https://fonts.googleapis.com/css?family=$_encodedStyle:400,400i,700,700i" rel="stylesheet">
         <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1">    
-        
+        <link rel="stylesheet" type="text/css" href="packages/quill_html_editor/assets/scripts/quill_editor_styles.css">
+
        <!-- Include the Quill library --> 
         <script>
         $_quillJsScript
