@@ -407,138 +407,7 @@ class ToolBarState extends State<ToolBar> {
     );
   }
 
-  ///[updateToolBarFormat] method to update the toolbar state in sync with editor formats
-  void updateToolBarFormat(Map<String, dynamic> formatMap) {
-    _formatMap = formatMap;
-    for (int i = 0; i < _toolbarList.length; i++) {
-      switch (_toolbarList[i].style) {
-        case ToolBarStyle.bold:
-          _toolbarList[i] =
-              _toolbarList[i].copyWith(isActive: formatMap['bold'] == true);
-          break;
-        case ToolBarStyle.italic:
-          _toolbarList[i] =
-              _toolbarList[i].copyWith(isActive: formatMap['italic'] == true);
-          break;
-        case ToolBarStyle.underline:
-          _toolbarList[i] = _toolbarList[i]
-              .copyWith(isActive: formatMap['underline'] == true);
-          break;
-        case ToolBarStyle.strike:
-          _toolbarList[i] =
-              _toolbarList[i].copyWith(isActive: formatMap['strike'] == true);
-          break;
-        case ToolBarStyle.blockQuote:
-          _toolbarList[i] = _toolbarList[i]
-              .copyWith(isActive: formatMap['blockquote'] == true);
-          break;
-        case ToolBarStyle.codeBlock:
-          _toolbarList[i] = _toolbarList[i]
-              .copyWith(isActive: formatMap['code-block'] == true);
-          break;
-        case ToolBarStyle.indentMinus:
-          _toolbarList[i] =
-              _toolbarList[i].copyWith(isActive: formatMap['indent'] != null);
-          break;
-        case ToolBarStyle.indentAdd:
-          _toolbarList[i] =
-              _toolbarList[i].copyWith(isActive: formatMap['indent'] != null);
-          break;
-        case ToolBarStyle.directionRtl:
-          _toolbarList[i] = _toolbarList[i]
-              .copyWith(isActive: formatMap['direction'] == 'rtl');
-          break;
-        case ToolBarStyle.directionLtr:
-          _toolbarList[i] = _toolbarList[i]
-              .copyWith(isActive: formatMap['direction'] != 'rtl');
-          break;
-        case ToolBarStyle.size:
-          _toolbarList[i] =
-              _toolbarList[i].copyWith(isActive: formatMap['size'] != null);
-          break;
-        case ToolBarStyle.headerOne:
-          _toolbarList[i] =
-              _toolbarList[i].copyWith(isActive: formatMap['header'] == 1);
-          break;
-        case ToolBarStyle.headerTwo:
-          _toolbarList[i] =
-              _toolbarList[i].copyWith(isActive: formatMap['header'] == 2);
-          break;
-        case ToolBarStyle.color:
-          _toolbarList[i] =
-              _toolbarList[i].copyWith(isActive: formatMap['color'] != null);
-          try {
-            if (formatMap['color'] != null) {
-              if (formatMap['color'].runtimeType.toString() ==
-                  'List<dynamic>') {
-                _formatMap['color'] = formatMap['color'][0];
-              } else {
-                _formatMap['color'] = formatMap['color'];
-              }
-            }
-          } catch (e) {
-            if (!kReleaseMode) {
-              debugPrint(e.toString());
-            }
-          }
-          break;
-        case ToolBarStyle.align:
-          formatMap['align'] ??= '';
-          _toolbarList[i] =
-              _toolbarList[i].copyWith(isActive: formatMap['align'] != null);
-          break;
-        case ToolBarStyle.listOrdered:
-          _toolbarList[i] = _toolbarList[i]
-              .copyWith(isActive: formatMap['list'] == 'ordered');
-          break;
-        case ToolBarStyle.listBullet:
-          _toolbarList[i] =
-              _toolbarList[i].copyWith(isActive: formatMap['list'] == 'bullet');
-          break;
-        case ToolBarStyle.image:
-          _toolbarList[i] =
-              _toolbarList[i].copyWith(isActive: formatMap['image'] != null);
-          break;
-        case ToolBarStyle.video:
-          _toolbarList[i] =
-              _toolbarList[i].copyWith(isActive: formatMap['video'] != null);
-          break;
-        case ToolBarStyle.clean:
-          _toolbarList[i] =
-              _toolbarList[i].copyWith(isActive: formatMap['clean'] != null);
-          break;
-        case ToolBarStyle.background:
-          _toolbarList[i] = _toolbarList[i]
-              .copyWith(isActive: formatMap['background'] != null);
-          try {
-            if (formatMap['background'] != null) {
-              if (formatMap['background'].runtimeType.toString() ==
-                  'List<dynamic>') {
-                _formatMap['background'] = formatMap['background'][0];
-              } else {
-                _formatMap['background'] = formatMap['background'];
-              }
-            }
-          } catch (e) {
-            if (!kReleaseMode) {
-              debugPrint(e.toString());
-            }
-          }
-          break;
-        case ToolBarStyle.link:
-          _formatMap['link'] = formatMap['link'];
-          break;
-        case ToolBarStyle.undo:
-        case ToolBarStyle.redo:
-        case ToolBarStyle.editTable:
-        case ToolBarStyle.addTable:
-        case ToolBarStyle.clearHistory:
-        case ToolBarStyle.separator:
-          break;
-      }
-    }
-    setState(() {});
-  }
+  ///[updateToolBarFormat
 
   List<Widget> _generateToolBar(BuildContext context) {
     List<Widget> tempToolBarList = [];
@@ -827,7 +696,7 @@ class ToolBarState extends State<ToolBar> {
                 ];
               },
               isDense: true,
-              value: _formatMap['size'] ?? 'normal',
+              value: _formatMap['size'] ?? '12',
               style: TextStyle(fontSize: 12, color: widget.iconColor!),
               items: [
                 _fontSizeItem(type: 'Small', fontSize: 8),
@@ -944,8 +813,7 @@ class ToolBarState extends State<ToolBar> {
         onColorPicked: (color) {
           _formatMap['color'] = color;
           _toolbarList[i] = _toolbarList[i].copyWith(isActive: true);
-          widget.controller
-              .setFormat(format: 'color', value: _formatMap['color']);
+          widget.controller.setFormat(format: 'color', value: color);
           setState(() {});
           if (_fontColorKey.currentState != null) {
             _fontColorKey.currentState!.hideOverlay();
