@@ -583,6 +583,8 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
         <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1">    
         <link rel="stylesheet" type="text/css" href="packages/quill_html_editor/assets/scripts/quill_editor_styles.css">
 
+        <script src="../image-resize.min.js"></script>
+
        <!-- Include the Quill library --> 
         <script>
         $_quillJsScript
@@ -686,6 +688,13 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
    
         </head>
         <body>
+
+        <div id="editor" style="max-height:400px;overflow:auto">
+        <p>Click on the Image Below to resize</p>
+        <p><img src="https://cdn.globalagmedia.com/pig/legacy/files/articles/suprisingPigFacts_fact6-image.jpg"></p>
+        
+        </div>
+
          <script>
            const resizeObserver = new ResizeObserver(entries =>{
             ///console.log("Offset height has changed:", (entries[0].target.clientHeight).toString())
