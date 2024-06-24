@@ -995,31 +995,25 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
             Quill.register('modules/imageResize', ImageResize);
 
             var quilleditor = new Quill('#editor', {
-              modules: {
-                toolbar: '#toolbar-container',
-                table: true,
-                 keyboard:  ${widget.inputAction == InputAction.send ? '{bindings: bindings}' : '{}'},
-                history: {
-                  delay: 2000,
-                  maxStack: 500,
-                  userOnly: false
-                },
-                 imageResize: {
-                  // options for image resize
-                }
-              },
-              theme: 'snow',
-             scrollingContainer: '#scrolling-container', 
-              placeholder: '${widget.hintText ?? "Description"}',
-              clipboard: {
-                matchVisual: true
-              }
-            });
+                  modules: {
+                    toolbar: '#toolbar-container',
+                    table: true,
+                    keyboard:  ${widget.inputAction == InputAction.send ? '{bindings: bindings}' : '{}'},
+                    history: {
+                      delay: 2000,
+                      maxStack: 500,
+                      userOnly: false
+                    },
+                    imageResize: {} // Enable the image resize module
+                  },
+                  theme: 'snow',
+                scrollingContainer: '#scrolling-container', 
+                  placeholder: '${widget.hintText ?? "Description"}',
+                  clipboard: {
+                    matchVisual: true
+                  }
+                });
 
-        
-
-            
-          
             const table = quilleditor.getModule('table');
             quilleditor.enable($isEnabled);
         
