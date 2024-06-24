@@ -583,7 +583,8 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
         <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1">    
         <link rel="stylesheet" type="text/css" href="packages/quill_html_editor/assets/scripts/quill_editor_styles.css">
 
-        <script src="../image-resize.min.js"></script>
+        <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+        <script src="packages/quill_html_editor/assets/scripts/image-resize.min.js"></script>
 
        <!-- Include the Quill library --> 
         <script>
@@ -688,12 +689,6 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
    
         </head>
         <body>
-
-        <div id="editor" style="max-height:400px;overflow:auto">
-        <p>Click on the Image Below to resize</p>
-        <p><img src="https://cdn.globalagmedia.com/pig/legacy/files/articles/suprisingPigFacts_fact6-image.jpg"></p>
-        
-        </div>
 
          <script>
            const resizeObserver = new ResizeObserver(entries =>{
@@ -997,6 +992,8 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
               }
               Quill.register(Breaker);
 
+            Quill.register('modules/imageResize', ImageResize);
+
             var quilleditor = new Quill('#editor', {
               modules: {
                 toolbar: '#toolbar-container',
@@ -1006,6 +1003,9 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
                   delay: 2000,
                   maxStack: 500,
                   userOnly: false
+                },
+                 imageResize: {
+                  // options for image resize
                 }
               },
               theme: 'snow',
@@ -1015,6 +1015,9 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
                 matchVisual: true
               }
             });
+
+        
+
             
           
             const table = quilleditor.getModule('table');
