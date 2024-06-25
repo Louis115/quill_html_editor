@@ -586,7 +586,7 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
         <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
         <script src="packages/quill_html_editor/assets/scripts/image-resize.min.js"></script>
 
-       <!-- Include the Quill library --> 
+        <!-- Include the Quill library --> 
         <script>
         $_quillJsScript
         </script>
@@ -603,7 +603,7 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
         margin:0px !important;
         background-color:${widget.backgroundColor.toRGBA()};
         color: ${widget.backgroundColor.toRGBA()};
-`        }
+        }
         .ql-font-roboto {
            font-family: '$_fontFamily', sans-serif;
           }
@@ -692,34 +692,30 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
 
          <script>
            const resizeObserver = new ResizeObserver(entries =>{
-            ///console.log("Offset height has changed:", (entries[0].target.clientHeight).toString())
-                if($kIsWeb) {
-                  EditorResizeCallback((entries[0].target.clientHeight).toString());
-                } else {
-                  EditorResizeCallback.postMessage((entries[0].target.clientHeight).toString());
-                }            
-            })
-            resizeObserver.observe(document.body)
-          </script>
+            if($kIsWeb) {
+              EditorResizeCallback((entries[0].target.clientHeight).toString());
+            } else {
+              EditorResizeCallback.postMessage((entries[0].target.clientHeight).toString());
+            }            
+          })
+          resizeObserver.observe(document.body)
+        </script>
          <script>
           let isTextSelectionInProgress = false;
 
           // Event handler for text selection start
           function handleTextSelectionStart() {
               isTextSelectionInProgress = true;
-             // console.log("Text selection started.");
           }
   
           // Event handler for text selection end
           function handleTextSelectionEnd() {
               isTextSelectionInProgress = false;
-             // console.log("Text selection ended.");
           }
   
           // Check if text is being selected while dragging the mouse
           function handleMouseMove(event) {
               if (isTextSelectionInProgress) {
-                  // Do something when the text is being selected (dragging the mouse while text is selected)
                   window.getSelection();
               }
           }
@@ -744,7 +740,6 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
       
         <!-- Initialize Quill editor -->
         <script>
-      
             let fullWindowHeight = window.innerHeight;
             let keyboardIsProbablyOpen = false;
             window.addEventListener("resize", function() {
@@ -777,529 +772,462 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
           function replaceSelection(replaceText) {
               try{
               var range = quilleditor.getSelection(true);
-                    if (range) {
-                      if (range.length == 0) {
-                       // console.log('User cursor is at index', range.index);
-                      } else {
-                       quilleditor.deleteText(range.index, range.length);
-                       quilleditor.insertText(range.index, replaceText);
-                      
-                      /// replace text with format will be coming in future release
-                      /// quilleditor.insertText(range.index, replaceText, JSON.parse(format));
-                      }
-                    } else {
-                     // console.log('User cursor is not in editor');
-                    }
-                }
-                 catch(e) {
-                    console.log('replaceSelection', e);
-                 } 
-            }
-            // Retrieve the Quill editor container element by its ID
-            var quillContainer = document.getElementById('scrolling-container');
-            
-            // Add the focusout event listener to the Quill editor container
-            quillContainer.addEventListener('focusout', function() {
-                 if($kIsWeb) {
-                FocusChanged(false);
-              } else {
-                FocusChanged.postMessage(false);
-              }
-            });
-            
-             quillContainer.addEventListener('focusin', () => {
-               if($kIsWeb) {
-                FocusChanged(true);
-              } else {
-                FocusChanged.postMessage(true);
-              }
-             })
-             quillContainer.addEventListener('click', function() {
-              quilleditor.focus(); // Set focus on the Quill editor
-              });
-             
-             /*quilleditor.root.addEventListener("blur", function() {
-               if($kIsWeb) {
-                FocusChanged(false);
+                if (range) {
+                  if (range.length == 0) {
+                  } else {
+                   quilleditor.deleteText(range.index, range.length);
+                   quilleditor.insertText(range.index, replaceText);
+                  }
                 } else {
-                var focus  = quilleditor.hasFocus();
-                  FocusChanged.postMessage(isQuillFocused());
                 }
+              }
+               catch(e) {
+                console.log('replaceSelection', e);
+              } 
+          }
+          var quillContainer = document.getElementById('scrolling-container');
+          quillContainer.addEventListener('focusout', function() {
+             if($kIsWeb) {
+              FocusChanged(false);
+            } else {
+              FocusChanged.postMessage(false);
+            }
+          });
+          
+           quillContainer.addEventListener('focusin', () => {
+             if($kIsWeb) {
+              FocusChanged(true);
+            } else {
+              FocusChanged.postMessage(true);
+            }
+           })
+           quillContainer.addEventListener('click', function() {
+            quilleditor.focus();
             });
-            
-            quilleditor.root.addEventListener("focus", function() {
-               if($kIsWeb) {
-                FocusChanged(true);
-              } else {
-              var focus  = quilleditor.hasFocus();
-                FocusChanged.postMessage(isQuillFocused());
-              }
-            });*/
-            
-            function isQuillFocused() {
-                // Retrieve the Quill editor container element by its ID
-                var quillContainer = document.getElementById('scrolling-container');
-              
-                // Check if the Quill editor container or any of its descendants have focus
-                return quillContainer.contains(document.activeElement);
-              }
-            
-            function getSelectedText() {
+           
+           function isQuillFocused() {
+            var quillContainer = document.getElementById('scrolling-container');
+            return quillContainer.contains(document.activeElement);
+          }
+          
+          function getSelectedText() {
             let text = '';
               try{
                 var range = quilleditor.getSelection(true);
-                    if (range) {
-                      if (range.length == 0) {
-                       // console.log('User cursor is at index', range.index);
-                      } else {
-                         text = quilleditor.getText(range.index, range.length);
-                      }
-                    } else {
-                    //  console.log('User cursor is not in editor');
-                    }
+                if (range) {
+                  if (range.length == 0) {
+                  } else {
+                    text = quilleditor.getText(range.index, range.length);
+                  }
+                } else {
                 }
-                 catch(e) {
-                    console.log('getSelectedText', e);
-                  } 
-                return text;  
-            }
+              }
+              catch(e) {
+                console.log('getSelectedText', e);
+              } 
+              return text;  
+          }
               
          
-            function applyGoogleKeyboardWorkaround(editor) {
-              try {
-              
-                let isIOS = /iPad|iPhone|iPod/.test(navigator.platform) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+          function applyGoogleKeyboardWorkaround(editor) {
+            try {
+              let isIOS = /iPad|iPhone|iPod/.test(navigator.platform) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
 
-                if($kIsWeb || isIOS){
-                  return;
-                }
-                if(editor.applyGoogleKeyboardWorkaround) {
-                  return
-                }
-                editor.applyGoogleKeyboardWorkaround = true
-                editor.on('editor-change', function(eventName, ...args) {
-                  try {
-                    // args[0] will be delta
-                    var ops = args[0]['ops']
-                    if(ops === null) {
-                      return
-                    }
-                    var oldSelection = editor.getSelection(true)
-                    var oldPos = oldSelection.index
-                    var oldSelectionLength = oldSelection.length
-                    if( ops[0]["retain"] === undefined || !ops[1] || !ops[1]["insert"] || !ops[1]["insert"] || ops[1]["list"] === "bullet" || ops[1]["list"] === "ordered" || ops[1]["insert"] != "\\n" || oldSelectionLength > 0) {
-                      return
-                    }
-                    
-                    setTimeout(function() {
-                      var newPos = editor.getSelection(true).index
-                      if(newPos === oldPos) {
-                      console.log('newPos oldPos');
-                        editor.setSelection(editor.getSelection(true).index + 1, 0)
-                      }
-                    }, 30);
-                    //onRangeChanged();
-                  } catch(e) {
-                    console.log('applyGoogleKeyboardWorkaround - editor-change', e);
-                  }
-                });
-              } catch(e) {
-                console.log('applyGoogleKeyboardWorkaround', e);
-              } 
-            }
-            
-            /// observer to listen to the editor div changes 
-            // select the target node
-            var target = document.querySelector('#editor');
-            
-            // create an observer instance
-            var tempText = "";
-            var observer = new MutationObserver(function(mutations) {
-                 var text = quilleditor.root.innerHTML; 
-                 if(text != tempText){
-                      tempText = text;
-                     if($kIsWeb) {
-                      OnTextChanged(text);
-                    } else {
-                      OnTextChanged.postMessage(text);
-                    }
-                     onRangeChanged(); 
-                     quilleditor.focus();
-                 }
-            });
-
-            // configuration of the observer:
-            var config = { attributes: true, childList: true, characterData: true, subtree: true };
-
-            // pass in the target node, as well as the observer options
-            observer.observe(target, config);
-    
-           // stops the listener
-           //// observer.disconnect();
-          
-        
-           //// to accept all link formats 
-           var Link = Quill.import('formats/link');
-              Link.sanitize = function(url) {
-                // modify url if desired
-                return url;
+              if($kIsWeb || isIOS){
+                return;
               }
-             Quill.register(Link, true);
-           
-            /// quill custom font import
-            var FontStyle = Quill.import('attributors/class/font');
-            Quill.register(FontStyle, true);
-            
-            const Inline = Quill.import('blots/inline');
-            class RequirementBlot extends Inline {}
-            RequirementBlot.blotName = 'requirement';
-            RequirementBlot.tagName = 'requirement';
-            Quill.register(RequirementBlot);
-            
-            class ResponsibilityBlot extends Inline {}
-            ResponsibilityBlot.blotName = 'responsibility';
-            ResponsibilityBlot.tagName = 'responsibility';
-            Quill.register(ResponsibilityBlot);
-            
-             ///// quill shift enter key binding      
-              var bindings = {
-                  linebreak: {
-                      key: 13,
-                      shiftKey: true,
-                      handler: function(range) {
-                          this.quill.insertEmbed(range.index, 'breaker', true, Quill.sources.USER);
-                          this.quill.setSelection(range.index + 1, Quill.sources.SILENT);
-                          return false;
-                      }
-                  },
-                  enter: {
-                      key: 'Enter',
-                      handler: () => {
-                         if($kIsWeb) {
-                          OnEditingCompleted(quilleditor.root.innerHTML);
-                          } else {
-                          OnEditingCompleted.postMessage(quilleditor.root.innerHTML);
-                          }
-                      }
-                  }
-              };
-              
-              let Embed = Quill.import('blots/embed');
-              
-              class Breaker extends Embed {
-                  static tagName = 'br';
-                  static blotName = 'breaker';
+              if(editor.applyGoogleKeyboardWorkaround) {
+                return
               }
-              Quill.register(Breaker);
-
-            Quill.register('modules/imageResize', ImageResize);
-
-            var quilleditor = new Quill('#editor', {
-                  modules: {
-                    toolbar: '#toolbar-container',
-                    table: true,
-                    keyboard:  ${widget.inputAction == InputAction.send ? '{bindings: bindings}' : '{}'},
-                    history: {
-                      delay: 2000,
-                      maxStack: 500,
-                      userOnly: false
-                    },
-                    imageResize: {} // Enable the image resize module
-                  },
-                  theme: 'snow',
-                scrollingContainer: '#scrolling-container', 
-                  placeholder: '${widget.hintText ?? "Description"}',
-                  clipboard: {
-                    matchVisual: true
+              editor.applyGoogleKeyboardWorkaround = true
+              editor.on('editor-change', function(eventName, ...args) {
+                try {
+                  var ops = args[0]['ops']
+                  if(ops === null) {
+                    return
                   }
-                });
-
-            const table = quilleditor.getModule('table');
-            quilleditor.enable($isEnabled);
-        
-           applyGoogleKeyboardWorkaround(quilleditor);
-            
-            let editorLoaded = false;
-            quilleditor.on('editor-change', function(eventName, ...args) {
-      
-             if (!editorLoaded) {
-                if($kIsWeb) {
-                    EditorLoaded(true);
-                } else {
-                    EditorLoaded.postMessage(true);
-                }
-                  editorLoaded = true;
-                }
-             
-            });
-            
-            quilleditor.on('selection-change', function(range, oldRange, source)  {
-             /// console.log('selection changed');
-              onRangeChanged();
-              if($kIsWeb){
-              OnSelectionChanged(getSelectionRange());
-              }else{
-              OnSelectionChanged.postMessage(getSelectionRange());
-              }     
-              
-            });
+                  var oldSelection = editor.getSelection(true)
+                  var oldPos = oldSelection.index
+                  var oldSelectionLength = oldSelection.length
+                  if( ops[0]["retain"] === undefined || !ops[1] || !ops[1]["insert"] || !ops[1]["insert"] || ops[1]["list"] === "bullet" || ops[1]["list"] === "ordered" || ops[1]["insert"] != "\\n" || oldSelectionLength > 0) {
+                    return
+                  }
                   
-            function onRangeChanged() { 
-              try {
-                var range = quilleditor.getSelection(true);
-                if(range != null) {
-                  if(range.length == 0) {
-                    var format = quilleditor.getFormat();
-                    formatParser(format);
-                  } else {
-                    var format = quilleditor.getFormat(range.index, range.length);
-                    formatParser(format);
-                  }
-                } else {
-                 // console.log('Cursor not in the editor');
+                  setTimeout(function() {
+                    var newPos = editor.getSelection(true).index
+                    if(newPos === oldPos) {
+                      editor.setSelection(editor.getSelection(true).index + 1, 0)
+                    }
+                  }, 30);
+                } catch(e) {
+                  console.log('applyGoogleKeyboardWorkaround - editor-change', e);
                 }
-              } catch(e) {
-              ///  console.log(e);
-              }
-            }
-            
-             function redo(){
-              quilleditor.history.redo();
-              return '';
-             }
-             
-             function undo(){
-              quilleditor.history.undo();
-              return '';
-             }
-             function clearHistory(){
-               quilleditor.history.clear();
-               return '';
-             }
-            
-            
-            function formatParser(format) {
-              var formatMap = {};
-              formatMap['bold'] = format['bold'];
-              formatMap['italic'] = format['italic'];
-              formatMap['underline'] = format['underline'];
-              formatMap['strike'] = format['strike'];
-              formatMap['blockqoute'] = format['blockqoute'];
-              formatMap['background'] = format['background'];
-              formatMap['code-block'] = format['code-block'];
-              formatMap['indent'] = format['indent'];
-              formatMap['direction'] = format['direction'];
-              formatMap['size'] = format['size'];
-              formatMap['header'] = format['header'];
-              formatMap['color'] = format['color'];
-              formatMap['font'] = format['font'];
-              formatMap['align'] = format['align'];
-              formatMap['list'] = format['list'];
-              formatMap['image'] = format['image'];
-              formatMap['video'] = format['video'];
-              formatMap['clean'] = format['clean'];
-              formatMap['link'] = format['link'];
+              });
+            } catch(e) {
+              console.log('applyGoogleKeyboardWorkaround', e);
+            } 
+          }
+          var target = document.querySelector('#editor');
+          var tempText = "";
+          var observer = new MutationObserver(function(mutations) {
+            var text = quilleditor.root.innerHTML; 
+            if(text != tempText){
+              tempText = text;
               if($kIsWeb) {
-                UpdateFormat(JSON.stringify(formatMap));
+                OnTextChanged(text);
               } else {
-                UpdateFormat.postMessage(JSON.stringify(formatMap));
+                OnTextChanged.postMessage(text);
+              }
+              onRangeChanged(); 
+              quilleditor.focus();
+            }
+          });
+
+          var config = { attributes: true, childList: true, characterData: true, subtree: true };
+          observer.observe(target, config);
+          var Link = Quill.import('formats/link');
+          Link.sanitize = function(url) {
+            return url;
+          }
+          Quill.register(Link, true);
+          var FontStyle = Quill.import('attributors/class/font');
+          Quill.register(FontStyle, true);
+          const Inline = Quill.import('blots/inline');
+          class RequirementBlot extends Inline {}
+          RequirementBlot.blotName = 'requirement';
+          RequirementBlot.tagName = 'requirement';
+          Quill.register(RequirementBlot);
+          
+          class ResponsibilityBlot extends Inline {}
+          ResponsibilityBlot.blotName = 'responsibility';
+          ResponsibilityBlot.tagName = 'responsibility';
+          Quill.register(ResponsibilityBlot);
+          
+          var bindings = {
+            linebreak: {
+              key: 13,
+              shiftKey: true,
+              handler: function(range) {
+                this.quill.insertEmbed(range.index, 'breaker', true, Quill.sources.USER);
+                this.quill.setSelection(range.index + 1, Quill.sources.SILENT);
+                return false;
+              }
+            },
+            enter: {
+              key: 'Enter',
+              handler: () => {
+                 if($kIsWeb) {
+                  OnEditingCompleted(quilleditor.root.innerHTML);
+                  } else {
+                  OnEditingCompleted.postMessage(quilleditor.root.innerHTML);
+                  }
               }
             }
-     
-           
-            function getHtmlText() {
-              return quilleditor.root.innerHTML;
+          };
+          
+          let Embed = Quill.import('blots/embed');
+          
+          class Breaker extends Embed {
+              static tagName = 'br';
+              static blotName = 'breaker';
+          }
+          Quill.register(Breaker);
+
+          Quill.register('modules/imageResize', ImageResize);
+
+          var quilleditor = new Quill('#editor', {
+            modules: {
+              toolbar: '#toolbar-container',
+              table: true,
+              keyboard:  ${widget.inputAction == InputAction.send ? '{bindings: bindings}' : '{}'},
+              history: {
+                delay: 2000,
+                maxStack: 500,
+                userOnly: false
+              },
+              imageResize: {} // Enable the image resize module
+            },
+            theme: 'snow',
+            scrollingContainer: '#scrolling-container', 
+            placeholder: '${widget.hintText ?? "Description"}',
+            clipboard: {
+              matchVisual: true
             }
- 
-            function getPlainText() {
-              var text = "";
-              try{
-                 text =  toPlaintext(quilleditor.getContents());
-              }catch(e){
-                 text = "";
+          });
+
+          const table = quilleditor.getModule('table');
+          quilleditor.enable($isEnabled);
+        
+          applyGoogleKeyboardWorkaround(quilleditor);
+            
+          let editorLoaded = false;
+          quilleditor.on('editor-change', function(eventName, ...args) {
+            if (!editorLoaded) {
+              if($kIsWeb) {
+                EditorLoaded(true);
+              } else {
+                EditorLoaded.postMessage(true);
               }
-              return text; 
+              editorLoaded = true;
             }
-            
-            function toPlaintext(delta) {
-              return delta.reduce(function (text, op) {
-                if (!op.insert) throw new TypeError('only `insert` operations can be transformed!');
-                if (typeof op.insert !== 'string') return text + ' ';
-                return text + op.insert;
-              }, '');
-            };
-            
-            function getSelection() {
+          });
+          
+          quilleditor.on('selection-change', function(range, oldRange, source)  {
+            onRangeChanged();
+            if($kIsWeb){
+              OnSelectionChanged(getSelectionRange());
+            } else {
+              OnSelectionChanged.postMessage(getSelectionRange());
+            }     
+          });
+          
+          function onRangeChanged() { 
+            try {
+              var range = quilleditor.getSelection(true);
+              if(range != null) {
+                if(range.length == 0) {
+                  var format = quilleditor.getFormat();
+                  formatParser(format);
+                } else {
+                  var format = quilleditor.getFormat(range.index, range.length);
+                  formatParser(format);
+                }
+              }
+            } catch(e) {
+            }
+          }
+          
+          function redo(){
+            quilleditor.history.redo();
+            return '';
+          }
+          
+          function undo(){
+            quilleditor.history.undo();
+            return '';
+          }
+          function clearHistory(){
+            quilleditor.history.clear();
+            return '';
+          }
+          
+          function formatParser(format) {
+            var formatMap = {};
+            formatMap['bold'] = format['bold'];
+            formatMap['italic'] = format['italic'];
+            formatMap['underline'] = format['underline'];
+            formatMap['strike'] = format['strike'];
+            formatMap['blockqoute'] = format['blockqoute'];
+            formatMap['background'] = format['background'];
+            formatMap['code-block'] = format['code-block'];
+            formatMap['indent'] = format['indent'];
+            formatMap['direction'] = format['direction'];
+            formatMap['size'] = format['size'];
+            formatMap['header'] = format['header'];
+            formatMap['color'] = format['color'];
+            formatMap['font'] = format['font'];
+            formatMap['align'] = format['align'];
+            formatMap['list'] = format['list'];
+            formatMap['image'] = format['image'];
+            formatMap['video'] = format['video'];
+            formatMap['clean'] = format['clean'];
+            formatMap['link'] = format['link'];
+            if($kIsWeb) {
+              UpdateFormat(JSON.stringify(formatMap));
+            } else {
+              UpdateFormat.postMessage(JSON.stringify(formatMap));
+            }
+          }
+          
+          function getHtmlText() {
+            return quilleditor.root.innerHTML;
+          }
+          
+          function getPlainText() {
+            var text = "";
+            try{
+               text =  toPlaintext(quilleditor.getContents());
+            }catch(e){
+               text = "";
+            }
+            return text; 
+          }
+          
+          function toPlaintext(delta) {
+            return delta.reduce(function (text, op) {
+              if (!op.insert) throw new TypeError('only `insert` operations can be transformed!');
+              if (typeof op.insert !== 'string') return text + ' ';
+              return text + op.insert;
+            }, '');
+          }
+          
+          function getSelection() {
             try{
               var range = quilleditor.getSelection(true);
               if(range) {
                 return range.length;
               }
-                }catch(e){
-                console.log('getSelection', e);
-              }
-              return -1;
+            }catch(e){
+              console.log('getSelection', e);
             }
-            
-            function getSelectionHtml() {
-              var selection = quilleditor.getSelection(true);
-              if(selection){
+            return -1;
+          }
+          
+          function getSelectionHtml() {
+            var selection = quilleditor.getSelection(true);
+            if(selection){
               var selectedContent = quilleditor.getContents(selection.index, selection.length);
               var tempContainer = document.createElement('div')
               var tempQuill = new Quill(tempContainer);
               tempQuill.setContents(selectedContent);
               return tempContainer.querySelector('.ql-editor').innerHTML;
-              }
-              return '';
             }
-            
-            function getSelectionRange() {
-              var range = quilleditor.getSelection(true);
-              if(range) {
-                var rangeMap = {};
-                rangeMap['length'] = range.length;
-                rangeMap['index'] = range.index;
-                return JSON.stringify(rangeMap);
-              }
-              return {};
+            return '';
+          }
+          
+          function getSelectionRange() {
+            var range = quilleditor.getSelection(true);
+            if(range) {
+              var rangeMap = {};
+              rangeMap['length'] = range.length;
+              rangeMap['index'] = range.index;
+              return JSON.stringify(rangeMap);
             }
-            
-            function setSelection(index, length) {
+            return {};
+          }
+          
+          function setSelection(index, length) {
             try{
               setTimeout(() => quilleditor.setSelection(index, length), 1);
-              }catch(e){
-                console.log('setSelection', e);
-              }
-              return '';
-            }
-            
-            function setHtmlText(htmlString) {
-            try{
-               quilleditor.enable(false);
-               quilleditor.clipboard.dangerouslyPasteHTML(htmlString);   
             }catch(e){
-               console.log('setHtmlText', e);
+              console.log('setSelection', e);
             }
-             setTimeout(() =>   quilleditor.enable($isEnabled), 10);  
-              return '';
-            }
-            
+            return '';
+          }
           
-            function setDeltaContent(deltaMap) {   
-              try{
-                  quilleditor.enable(false);
-                  const obj = JSON.parse(deltaMap);
-                  quilleditor.setContents(obj);
-                }catch(e){
-                  console.log('setDeltaContent', e);
-                }
-               setTimeout(() =>   quilleditor.enable($isEnabled), 10);  
-              return '';
+          function setHtmlText(htmlString) {
+            try{
+              quilleditor.enable(false);
+              quilleditor.clipboard.dangerouslyPasteHTML(htmlString);   
+            }catch(e){
+              console.log('setHtmlText', e);
             }
-            
-            function getDelta() {
-              return JSON.stringify(quilleditor.getContents()); 
+            setTimeout(() => quilleditor.enable($isEnabled), 10);  
+            return '';
+          }
+          
+          function setDeltaContent(deltaMap) {   
+            try{
+              quilleditor.enable(false);
+              const obj = JSON.parse(deltaMap);
+              quilleditor.setContents(obj);
+            }catch(e){
+              console.log('setDeltaContent', e);
             }
+            setTimeout(() => quilleditor.enable($isEnabled), 10);  
+            return '';
+          }
+          
+          function getDelta() {
+            return JSON.stringify(quilleditor.getContents()); 
+          }
 
-            function requestFocus() {
-              try{
+          function requestFocus() {
+            try{
               var htmlString = quilleditor.root.innerHTML;
-               setTimeout(() => {
-                    quilleditor.setSelection(htmlString.length + 1, htmlString.length + 1);
-                    quilleditor.focus();
-               }, 600);
-              }catch(e){
-                console.log('requestFocus',e);
+              setTimeout(() => {
+                quilleditor.setSelection(htmlString.length + 1, htmlString.length + 1);
+                quilleditor.focus();
+              }, 600);
+            }catch(e){
+              console.log('requestFocus',e);
+            }
+            return '';
+          }
+          
+          function unFocus() {
+            quilleditor.root.blur()
+            return '';
+          }
+
+          function insertTable(row,column) {
+            table.insertTable(row, column);
+            return '';
+          }
+          
+          function modifyTable(type) {
+            if(type =="insertRowAbove"){
+              table.insertRowAbove();
+            }else if(type == "insertRowBelow"){
+              table.insertRowBelow();
+            }else if(type == "insertColumnLeft"){
+              table.insertColumnLeft();
+            }else if(type == "insertColumnRight"){
+              table.insertColumnRight();
+            }else if(type == "deleteRow"){
+              table.deleteRow();
+            }else if(type == "deleteColumn"){
+              table.deleteColumn();
+            }else if(type == "deleteTable"){
+              table.deleteTable();
+            }
+            return '';
+          }
+          
+          function insertHtmlText(htmlString, index) {
+            if(index == null) {
+              var range = quilleditor.getSelection(true);
+              if(range) {
+                quilleditor.clipboard.dangerouslyPasteHTML(range.index, htmlString);
               }
-            
-              return '';
+            } else {
+              quilleditor.clipboard.dangerouslyPasteHTML(index, htmlString);
             }
-            
-            function unFocus() {
-              quilleditor.root.blur()
-              return '';
+            return '';
+          }
+          
+          function embedVideo(videoUrl) {
+            var range = quilleditor.getSelection(true);
+            if(range) {
+              quilleditor.insertEmbed(range.index, 'video', videoUrl);
             }
-  
-            function insertTable(row,column) {
-              table.insertTable(row, column);
-              return '';
+            return '';
+          }
+          
+          function embedImage(img) {
+            var range = quilleditor.getSelection(true);
+            if(range) {
+              quilleditor.insertEmbed(range.index, 'image', img);
             }
-            
-            function modifyTable(type) {
-                if(type =="insertRowAbove"){
-                 table.insertRowAbove();
-                }else if(type == "insertRowBelow"){
-                  table.insertRowBelow();
-                }else if(type == "insertColumnLeft"){
-                  table.insertColumnLeft();
-                }else if(type == "insertColumnRight"){
-                  table.insertColumnRight();
-                }else if(type == "deleteRow"){
-                  table.deleteRow();
-                }else if(type == "deleteColumn"){
-                  table.deleteColumn();
-                }else if(type == "deleteTable"){
-                  table.deleteTable();
-                }
-              return '';
-            }
-            
-            function insertHtmlText(htmlString, index) {
-              if(index == null) {
+            return '';
+          }
+          
+          function enableEditor(isEnabled) {
+            quilleditor.enable(isEnabled);
+            return '';
+          }
+          
+          function setFormat(format, value) {
+            try {
+              if (format == 'clean') {
                 var range = quilleditor.getSelection(true);
-                if(range) {
-                  quilleditor.clipboard.dangerouslyPasteHTML(range.index, htmlString);
-                }
-              } else {
-                quilleditor.clipboard.dangerouslyPasteHTML(index, htmlString);
-              }
-              return '';
-            }
-            
-            function embedVideo(videoUrl) {
-              var range = quilleditor.getSelection(true);
-              if(range) {
-                quilleditor.insertEmbed(range.index, 'video', videoUrl);
-              }
-              return '';
-            }
-            
-            function embedImage(img) {
-              var range = quilleditor.getSelection(true);
-              if(range) {
-                quilleditor.insertEmbed(range.index, 'image', img);
-              }
-              return '';
-            }
-            
-            function enableEditor(isEnabled) {
-              quilleditor.enable(isEnabled);
-              return '';
-            }
-            
-            function setFormat(format, value) {
-              try {
-                console.log('setFormat called with', format, value);
-                if (format == 'clean') {
-                  var range = quilleditor.getSelection(true);
-                  if (range) {
-                    if (range.length == 0) {
-                      quilleditor.removeFormat(range.index, quilleditor.root.innerHTML.length);
-                    } else {
-                      quilleditor.removeFormat(range.index, range.length);
-                    }
+                if (range) {
+                  if (range.length == 0) {
+                    quilleditor.removeFormat(range.index, quilleditor.root.innerHTML.length);
                   } else {
-                    quilleditor.format('clean');
+                    quilleditor.removeFormat(range.index, range.length);
                   }
                 } else {
-                console.log('JS setFormat called with format:', format, 'value:', value);
-                  quilleditor.format(format, value);
+                  quilleditor.format('clean');
                 }
-              } catch (e) {
-                console.log('setFormat error', e);
+              } else {
+                quilleditor.format(format, value);
               }
-              return '';
+            } catch (e) {
+              console.log('setFormat error', e);
             }
+            return '';
+          }
         </script>
         </body>
         </html>
