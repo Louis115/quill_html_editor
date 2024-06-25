@@ -933,7 +933,7 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
           }
           Quill.register(Breaker);
 
-          Quill.register('modules/imageResize', ImageResize);
+          Quill.register('modules/imageResize', window.ImageResize.default);
 
           var quilleditor = new Quill('#editor', {
             modules: {
