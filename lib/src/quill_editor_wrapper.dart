@@ -2,9 +2,11 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 import 'package:quill_html_editor/quill_html_editor.dart';
 import 'package:quill_html_editor/src/utils/hex_color.dart';
 import 'package:quill_html_editor/src/utils/string_util.dart';
@@ -23,6 +25,8 @@ typedef LoadingBuilder = Widget Function(BuildContext context);
 class QuillHtmlEditor extends StatefulWidget {
   ///[QuillHtmlEditor] widget to display the quill editor,
   ///pass the controller to access the editor methods
+  final ScrollController pageScrollController;
+
   QuillHtmlEditor({
     this.text,
     required this.controller,
@@ -55,6 +59,7 @@ class QuillHtmlEditor extends StatefulWidget {
       color: Colors.black87,
       fontWeight: FontWeight.normal,
     ),
+    required this.pageScrollController,
   }) : super(key: controller._editorKey);
 
   /// [text] to set initial text to the editor, please use text
@@ -198,7 +203,6 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
   }
 
   @override
-  @override
   Widget build(BuildContext context) {
     return FutureBuilder(
       future: _loadScripts,
@@ -266,6 +270,33 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
             });
           },
           dartCallBacks: {
+            // Dart callback for handling scroll
+            DartCallback(
+              name: 'OnScroll',
+              callBack: (data) {
+                try {
+                  double scrollDelta = double.tryParse(data.toString()) ?? 0.0;
+                  // print('Scrolling in WebViewX area with delta: $scrollDelta');
+                  double newPosition =
+                      widget.pageScrollController.position.pixels + scrollDelta;
+                  if (newPosition > 0 &&
+                      newPosition <
+                          widget
+                              .pageScrollController.position.maxScrollExtent) {
+                    widget.pageScrollController.jumpTo(newPosition);
+                  } else if (newPosition <= 0) {
+                    widget.pageScrollController.jumpTo(0);
+                  } else if (newPosition >=
+                      widget.pageScrollController.position.maxScrollExtent) {
+                    widget.pageScrollController.jumpTo(
+                        widget.pageScrollController.position.maxScrollExtent);
+                  }
+                } catch (e) {
+                  print('Error parsing scroll delta: $e');
+                }
+              },
+            ),
+
             DartCallback(
               name: 'EditorLoaded',
               callBack: (map) {
@@ -603,6 +634,7 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
         margin:0px !important;
         background-color:${widget.backgroundColor.toRGBA()};
         color: ${widget.backgroundColor.toRGBA()};
+         
         }
         .ql-font-roboto {
            font-family: '$_fontFamily', sans-serif;
@@ -673,7 +705,7 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
          display:none;
         }     
         #scrolling-container {  
-        overflow-y: scroll  !important;
+        overflow-y: hidden  !important;
           min-height: ${widget.minHeight}px !important;
           -webkit-user-select: text !important;
            scrollbar-width: none !important; 
@@ -725,9 +757,13 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
           document.addEventListener("mouseup", handleTextSelectionEnd);
           document.addEventListener("mousemove", handleMouseMove);
          
+
+         
+
+
          </script> 
         <!-- Create the toolbar container -->
-        <div id="scrolling-container">
+        <div id="scrolling-container" onwheel="myFunction(event)">
         <div id="toolbar-container"></div>
         
         <!-- Create the editor container -->
@@ -802,9 +838,24 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
             }
            })
            quillContainer.addEventListener('click', function() {
+            // console.log("Hello world!");
             quilleditor.focus();
             });
-           
+
+
+            function myFunction(event) {
+              var yPositionDeta = event.deltaY;
+              // console.log(yPositionDeta);
+
+               if ($kIsWeb) {
+                OnScroll(yPositionDeta);
+              } else {
+                OnScroll.postMessage(yPositionDeta);
+              }
+            }
+
+
+
            function isQuillFocused() {
             var quillContainer = document.getElementById('scrolling-container');
             return quillContainer.contains(document.activeElement);
