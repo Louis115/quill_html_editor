@@ -250,8 +250,10 @@ class ToolBar extends StatefulWidget {
   ///[ToolBar] widget to show the quill
   /// The toolbar items will be auto aligned based on the screen's width or height
   /// The behaviour of the widget's alignment is similar to [Wrap] widget
+  final String editorKey;
 
   ToolBar({
+    required this.editorKey,
     this.direction = Axis.horizontal,
     this.alignment = WrapAlignment.start,
     this.spacing = 0.0,
@@ -284,6 +286,7 @@ class ToolBar extends StatefulWidget {
   ///the direction defaults to [Axis.horizontal]
 
   ToolBar.scroll({
+    required this.editorKey,
     this.direction = Axis.horizontal,
     this.textDirection,
     this.verticalDirection = VerticalDirection.down,
@@ -582,6 +585,7 @@ class ToolBarState extends State<ToolBar> {
             child: Padding(
               padding: _buttonPadding,
               child: InputUrlWidget(
+                editorKey: widget.editorKey,
                 iconWidget: SizedBox(
                   width: widget.iconSize! - 2,
                   height: widget.iconSize! - 2,
@@ -593,8 +597,8 @@ class ToolBarState extends State<ToolBar> {
                 isActive: _formatMap['video'] != null,
                 controller: widget.controller,
                 type: UrlInputType.video,
-                onSubmit: (v) {
-                  widget.controller.embedVideo(v);
+                onSubmit: (videoUrl) {
+                  widget.controller.embedVideo(videoUrl, widget.editorKey);
                 },
               ),
             )));
@@ -605,6 +609,7 @@ class ToolBarState extends State<ToolBar> {
             child: Padding(
               padding: _buttonPadding,
               child: InputUrlWidget(
+                editorKey: widget.editorKey,
                 iconWidget: Icon(
                   Icons.link,
                   color: widget.iconColor,
@@ -614,7 +619,8 @@ class ToolBarState extends State<ToolBar> {
                 controller: widget.controller,
                 type: UrlInputType.hyperlink,
                 onSubmit: (v) {
-                  widget.controller.setFormat(format: 'link', value: v);
+                  widget.controller
+                      .setFormat(widget.editorKey, format: 'link', value: v);
                 },
               ),
             )));
@@ -649,7 +655,8 @@ class ToolBarState extends State<ToolBar> {
               iconColor: widget.iconColor!,
               iconSize: widget.iconSize!,
               dropDownColor: widget.toolBarColor!,
-              onOptionSelected: (type) => widget.controller.modifyTable(type),
+              onOptionSelected: (type) =>
+                  widget.controller.modifyTable(type, widget.editorKey),
             )));
       } else if (toolbarItem.style == ToolBarStyle.separator) {
         if (widget.direction == Axis.horizontal) {
@@ -690,15 +697,15 @@ class ToolBarState extends State<ToolBar> {
               isActive: toolbarItem.isActive,
               onTap: () async {
                 if (toolbarItem.style == ToolBarStyle.clearHistory) {
-                  widget.controller.clearHistory();
+                  widget.controller.clearHistory(widget.editorKey);
                 } else if (toolbarItem.style == ToolBarStyle.undo) {
-                  widget.controller.undo();
+                  widget.controller.undo(widget.editorKey);
                 } else if (toolbarItem.style == ToolBarStyle.redo) {
-                  widget.controller.redo();
+                  widget.controller.redo(widget.editorKey);
                 } else if (toolbarItem.style == ToolBarStyle.image) {
                   await ImageSelector(onImagePicked: (value) {
                     _formatMap['image'] = value;
-                    widget.controller.embedImage(value);
+                    widget.controller.embedImage(value, widget.editorKey);
                   }).pickFiles();
                 } else if (toolbarItem.style == ToolBarStyle.clean) {
                   List<ToolBarItem> tempList = [];
@@ -729,11 +736,12 @@ class ToolBarState extends State<ToolBar> {
                 }
                 Map<String, dynamic> getFormat =
                     _getFormatByStyle(toolbarItem.style, toolbarItem.isActive);
-                widget.controller.setFormat(
+                widget.controller.setFormat(widget.editorKey,
                     format: getFormat['format'], value: getFormat['value']);
 
                 if (_formatMap['direction'] == 'rtl') {
-                  widget.controller.setFormat(format: 'align', value: 'right');
+                  widget.controller.setFormat(widget.editorKey,
+                      format: 'align', value: 'right');
                 }
                 setState(() {});
               },
@@ -840,7 +848,7 @@ class ToolBarState extends State<ToolBar> {
               onChanged: (value) {
                 print("Selected font size: $value");
                 _formatMap['size'] = value;
-                widget.controller.setFormat(
+                widget.controller.setFormat(widget.editorKey,
                     format: 'size', value: value == 'normal' ? '' : value);
                 setState(() {});
               }),
@@ -901,8 +909,8 @@ class ToolBarState extends State<ToolBar> {
             ],
             onChanged: (value) {
               _formatMap['align'] = value == 'left' ? '' : value;
-              widget.controller
-                  .setFormat(format: 'align', value: _formatMap['align']);
+              widget.controller.setFormat(widget.editorKey,
+                  format: 'align', value: _formatMap['align']);
               setState(() {});
             }),
       ),
@@ -944,7 +952,8 @@ class ToolBarState extends State<ToolBar> {
         onColorPicked: (color) {
           _formatMap['color'] = color;
           _toolbarList[i] = _toolbarList[i].copyWith(isActive: true);
-          widget.controller.setFormat(format: 'color', value: color);
+          widget.controller
+              .setFormat(widget.editorKey, format: 'color', value: color);
           setState(() {});
           if (_fontColorKey.currentState != null) {
             _fontColorKey.currentState!.hideOverlay();
@@ -1000,8 +1009,8 @@ class ToolBarState extends State<ToolBar> {
           _formatMap['background'] = color;
           _toolbarList[i] = _toolbarList[i].copyWith(isActive: true);
 
-          widget.controller
-              .setFormat(format: 'background', value: _formatMap['background']);
+          widget.controller.setFormat(widget.editorKey,
+              format: 'background', value: _formatMap['background']);
           setState(() {});
           if (_fontBgColorKey.currentState != null) {
             _fontBgColorKey.currentState!.hideOverlay();
@@ -1056,7 +1065,7 @@ class ToolBarState extends State<ToolBar> {
         height: 200,
         child: TablePicker(
           onTablePicked: (int row, int column) {
-            widget.controller.insertTable(row, column);
+            widget.controller.insertTable(row, column, widget.editorKey);
             if (_tablePickerKey.currentState != null) {
               _tablePickerKey.currentState!.hideOverlay();
             }
@@ -1114,7 +1123,8 @@ class ToolBarState extends State<ToolBar> {
                             rowCount: 8,
                             width: 300,
                             onTablePicked: (int row, int column) {
-                              widget.controller.insertTable(row, column);
+                              widget.controller
+                                  .insertTable(row, column, widget.editorKey);
                               Navigator.of(context).pop();
                             },
                           ),

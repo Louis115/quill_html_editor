@@ -2,11 +2,11 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/widgets.dart';
+
 import 'package:quill_html_editor/quill_html_editor.dart';
 import 'package:quill_html_editor/src/utils/hex_color.dart';
 import 'package:quill_html_editor/src/utils/string_util.dart';
@@ -26,11 +26,13 @@ class QuillHtmlEditor extends StatefulWidget {
   ///[QuillHtmlEditor] widget to display the quill editor,
   ///pass the controller to access the editor methods
   final ScrollController pageScrollController;
+  final String editorKey;
 
   QuillHtmlEditor({
     this.text,
     required this.controller,
     required this.minHeight,
+    required this.editorKey,
     this.isEnabled = true,
     this.onTextChanged,
     this.backgroundColor = Colors.white,
@@ -60,7 +62,7 @@ class QuillHtmlEditor extends StatefulWidget {
       fontWeight: FontWeight.normal,
     ),
     required this.pageScrollController,
-  }) : super(key: controller._editorKey);
+  }) : super(key: controller.getEditorKey(editorKey));
 
   /// [text] to set initial text to the editor, please use text
   /// We can also use the setText method for the same
@@ -194,6 +196,7 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
     _currentHeight = widget.minHeight;
 
     super.initState();
+    debugPrint("finished quilleditor rendering");
   }
 
   @override
@@ -239,240 +242,246 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
   Widget _buildEditorView(
       {required BuildContext context, required double width}) {
     _initialContent = _getQuillPage(width: width);
-    return Stack(
-      children: [
-        WebViewX(
-          key: ValueKey(widget.controller.toolBarKey.hashCode.toString()),
-          initialContent: _initialContent,
-          initialSourceType: SourceType.html,
-          height: _currentHeight,
-          onPageStarted: (s) {
-            _editorLoaded = false;
-          },
-          ignoreAllGestures: false,
-          width: width,
-          onWebViewCreated: (controller) => _webviewController = controller,
-          onPageFinished: (src) {
-            Future.delayed(const Duration(milliseconds: 100)).then((value) {
-              _editorLoaded = true;
-              if (mounted) {
-                setState(() {});
-              }
-              widget.controller.enableEditor(isEnabled);
-              if (widget.text != null) {
-                _setHtmlTextToEditor(htmlText: widget.text!);
-              }
-              if (widget.autoFocus == true) {
-                widget.controller.focus();
-              }
-              widget.controller.markEditorReady(); // Mark editor as ready
-              widget.controller._editorLoadedController?.add('');
-            });
-          },
-          dartCallBacks: {
-            // Dart callback for handling scroll
-            DartCallback(
-              name: 'OnScroll',
-              callBack: (data) {
-                try {
-                  double scrollDelta = double.tryParse(data.toString()) ?? 0.0;
-                  // print('Scrolling in WebViewX area with delta: $scrollDelta');
-                  double newPosition =
-                      widget.pageScrollController.position.pixels + scrollDelta;
-                  if (newPosition > 0 &&
-                      newPosition <
-                          widget
-                              .pageScrollController.position.maxScrollExtent) {
-                    widget.pageScrollController.jumpTo(newPosition);
-                  } else if (newPosition <= 0) {
-                    widget.pageScrollController.jumpTo(0);
-                  } else if (newPosition >=
-                      widget.pageScrollController.position.maxScrollExtent) {
-                    widget.pageScrollController.jumpTo(
-                        widget.pageScrollController.position.maxScrollExtent);
-                  }
-                } catch (e) {
-                  print('Error parsing scroll delta: $e');
-                }
-              },
-            ),
-
-            DartCallback(
-              name: 'EditorLoaded',
-              callBack: (map) {
+    return RepaintBoundary(
+      child: Stack(
+        children: [
+          WebViewX(
+            key: ValueKey(widget.controller.toolBarKey.hashCode.toString()),
+            initialContent: _initialContent,
+            initialSourceType: SourceType.html,
+            height: _currentHeight,
+            onPageStarted: (s) {
+              _editorLoaded = false;
+            },
+            ignoreAllGestures: false,
+            width: width,
+            onWebViewCreated: (controller) => _webviewController = controller,
+            onPageFinished: (src) {
+              Future.delayed(const Duration(milliseconds: 100)).then((value) {
                 _editorLoaded = true;
                 if (mounted) {
                   setState(() {});
                 }
+
+                widget.controller.enableEditor(isEnabled, widget.editorKey);
+
+                if (widget.text != null) {
+                  _setHtmlTextToEditor(htmlText: widget.text!);
+                }
+                if (widget.autoFocus == true) {
+                  widget.controller.focus(widget.editorKey);
+                }
                 widget.controller.markEditorReady(); // Mark editor as ready
-              },
-            ),
-            DartCallback(
-                name: 'EditorResizeCallback',
-                callBack: (height) {
-                  if (_currentHeight == double.tryParse(height.toString())) {
-                    return;
-                  }
+                widget.controller._editorLoadedController?.add('');
+              });
+            },
+            dartCallBacks: {
+              // Dart callback for handling scroll
+              DartCallback(
+                name: 'OnScroll',
+                callBack: (data) {
                   try {
-                    _currentHeight =
-                        double.tryParse(height.toString()) ?? widget.minHeight;
-                  } catch (e) {
-                    _currentHeight = widget.minHeight;
-                  } finally {
-                    if (mounted) {
-                      setState(() => _currentHeight);
-                    }
-                    if (widget.onEditorResized != null) {
-                      widget.onEditorResized!(_currentHeight);
-                    }
-                  }
-                }),
-            DartCallback(
-                name: 'UpdateFormat',
-                callBack: (map) {
-                  try {
-                    if (widget.controller._toolBarKey != null) {
-                      widget.controller._toolBarKey!.currentState
-                          ?.updateToolBarFormat(jsonDecode(map));
+                    double scrollDelta =
+                        double.tryParse(data.toString()) ?? 0.0;
+                    // print('Scrolling in WebViewX area with delta: $scrollDelta');
+                    double newPosition =
+                        widget.pageScrollController.position.pixels +
+                            scrollDelta;
+                    if (newPosition > 0 &&
+                        newPosition <
+                            widget.pageScrollController.position
+                                .maxScrollExtent) {
+                      widget.pageScrollController.jumpTo(newPosition);
+                    } else if (newPosition <= 0) {
+                      widget.pageScrollController.jumpTo(0);
+                    } else if (newPosition >=
+                        widget.pageScrollController.position.maxScrollExtent) {
+                      widget.pageScrollController.jumpTo(
+                          widget.pageScrollController.position.maxScrollExtent);
                     }
                   } catch (e) {
-                    if (!kReleaseMode) {
-                      debugPrint(e.toString());
-                    }
+                    print('Error parsing scroll delta: $e');
                   }
-                }),
-            DartCallback(
-                name: 'OnTextChanged',
-                callBack: (map) {
-                  var tempText = "";
-                  if (tempText == map) {
-                    return;
-                  } else {
-                    tempText = map;
-                  }
-                  try {
-                    if (widget.controller._changeController != null) {
-                      String finalText = "";
-                      String parsedText =
-                          map; // No need to strip HTML tags here.
-                      if (parsedText.trim() == "") {
-                        finalText = "";
-                      } else {
-                        finalText = map;
-                      }
-                      if (widget.onTextChanged != null) {
-                        widget.onTextChanged!(finalText);
-                      }
-                      widget.controller._changeController!.add(finalText);
-                    }
-                  } catch (e) {
-                    if (!kReleaseMode) {
-                      debugPrint(e.toString());
-                    }
-                  }
-                }),
+                },
+              ),
 
-            DartCallback(
-                name: 'FocusChanged',
-                callBack: (map) {
-                  _hasFocus = map?.toString() == 'true';
-                  if (widget.onFocusChanged != null) {
-                    widget.onFocusChanged!(_hasFocus);
-                  }
-
-                  /// scrolls to the end of the text area, to keep the focus visible
-                  if (widget.ensureVisible == true && _hasFocus) {
-                    Scrollable.of(context).position.ensureVisible(
-                        context.findRenderObject()!,
-                        duration: const Duration(milliseconds: 300),
-                        alignmentPolicy:
-                            ScrollPositionAlignmentPolicy.keepVisibleAtEnd,
-                        curve: Curves.fastLinearToSlowEaseIn);
-                  }
-                }),
-            DartCallback(
-                name: 'OnEditingCompleted',
-                callBack: (map) {
-                  var tempText = "";
-                  if (tempText == map) {
-                    return;
-                  } else {
-                    tempText = map;
-                  }
-                  try {
-                    if (widget.controller._changeController != null) {
-                      String finalText = "";
-                      String parsedText =
-                          QuillEditorController._stripHtmlIfNeeded(map);
-                      if (parsedText.trim() == "") {
-                        finalText = "";
-                      } else {
-                        finalText = map;
-                      }
-                      if (widget.onEditingComplete != null) {
-                        widget.onEditingComplete!(finalText);
-                      }
-                      widget.controller._changeController!.add(finalText);
-                    }
-                  } catch (e) {
-                    if (!kReleaseMode) {
-                      debugPrint(e.toString());
-                    }
-                  }
-                }),
-            DartCallback(
-                name: 'OnSelectionChanged',
-                callBack: (selection) {
-                  try {
-                    if (widget.onSelectionChanged != null) {
-                      if (!_hasFocus) {
-                        if (widget.onFocusChanged != null) {
-                          _hasFocus = true;
-                          widget.onFocusChanged!(_hasFocus);
-                        }
-                      }
-                      widget.onSelectionChanged!(selection != null
-                          ? SelectionModel.fromJson(jsonDecode(selection))
-                          : SelectionModel(index: 0, length: 0));
-                    }
-                  } catch (e) {
-                    if (!kReleaseMode) {
-                      debugPrint(e.toString());
-                    }
-                  }
-                }),
-
-            /// callback to notify once editor is completely loaded
-            DartCallback(
+              DartCallback(
                 name: 'EditorLoaded',
                 callBack: (map) {
                   _editorLoaded = true;
                   if (mounted) {
                     setState(() {});
                   }
-                }),
-          },
-          webSpecificParams: const WebSpecificParams(
-            printDebugInfo: false,
+                  widget.controller.markEditorReady(); // Mark editor as ready
+                },
+              ),
+              DartCallback(
+                  name: 'EditorResizeCallback',
+                  callBack: (height) {
+                    if (_currentHeight == double.tryParse(height.toString())) {
+                      return;
+                    }
+                    try {
+                      _currentHeight = double.tryParse(height.toString()) ??
+                          widget.minHeight;
+                    } catch (e) {
+                      _currentHeight = widget.minHeight;
+                    } finally {
+                      if (mounted) {
+                        setState(() => _currentHeight);
+                      }
+                      if (widget.onEditorResized != null) {
+                        widget.onEditorResized!(_currentHeight);
+                      }
+                    }
+                  }),
+              DartCallback(
+                  name: 'UpdateFormat',
+                  callBack: (map) {
+                    try {
+                      if (widget.controller._toolBarKey != null) {
+                        widget.controller._toolBarKey!.currentState
+                            ?.updateToolBarFormat(jsonDecode(map));
+                      }
+                    } catch (e) {
+                      if (!kReleaseMode) {
+                        debugPrint(e.toString());
+                      }
+                    }
+                  }),
+              DartCallback(
+                  name: 'OnTextChanged',
+                  callBack: (map) {
+                    var tempText = "";
+                    if (tempText == map) {
+                      return;
+                    } else {
+                      tempText = map;
+                    }
+                    try {
+                      if (widget.controller._changeController != null) {
+                        String finalText = "";
+                        String parsedText =
+                            map; // No need to strip HTML tags here.
+                        if (parsedText.trim() == "") {
+                          finalText = "";
+                        } else {
+                          finalText = map;
+                        }
+                        if (widget.onTextChanged != null) {
+                          widget.onTextChanged!(finalText);
+                        }
+                        widget.controller._changeController!.add(finalText);
+                      }
+                    } catch (e) {
+                      if (!kReleaseMode) {
+                        debugPrint(e.toString());
+                      }
+                    }
+                  }),
+
+              DartCallback(
+                  name: 'FocusChanged',
+                  callBack: (map) {
+                    _hasFocus = map?.toString() == 'true';
+                    if (widget.onFocusChanged != null) {
+                      widget.onFocusChanged!(_hasFocus);
+                    }
+
+                    /// scrolls to the end of the text area, to keep the focus visible
+                    if (widget.ensureVisible == true && _hasFocus) {
+                      Scrollable.of(context).position.ensureVisible(
+                          context.findRenderObject()!,
+                          duration: const Duration(milliseconds: 300),
+                          alignmentPolicy:
+                              ScrollPositionAlignmentPolicy.keepVisibleAtEnd,
+                          curve: Curves.fastLinearToSlowEaseIn);
+                    }
+                  }),
+              DartCallback(
+                  name: 'OnEditingCompleted',
+                  callBack: (map) {
+                    var tempText = "";
+                    if (tempText == map) {
+                      return;
+                    } else {
+                      tempText = map;
+                    }
+                    try {
+                      if (widget.controller._changeController != null) {
+                        String finalText = "";
+                        String parsedText =
+                            QuillEditorController._stripHtmlIfNeeded(map);
+                        if (parsedText.trim() == "") {
+                          finalText = "";
+                        } else {
+                          finalText = map;
+                        }
+                        if (widget.onEditingComplete != null) {
+                          widget.onEditingComplete!(finalText);
+                        }
+                        widget.controller._changeController!.add(finalText);
+                      }
+                    } catch (e) {
+                      if (!kReleaseMode) {
+                        debugPrint(e.toString());
+                      }
+                    }
+                  }),
+              DartCallback(
+                  name: 'OnSelectionChanged',
+                  callBack: (selection) {
+                    try {
+                      if (widget.onSelectionChanged != null) {
+                        if (!_hasFocus) {
+                          if (widget.onFocusChanged != null) {
+                            _hasFocus = true;
+                            widget.onFocusChanged!(_hasFocus);
+                          }
+                        }
+                        widget.onSelectionChanged!(selection != null
+                            ? SelectionModel.fromJson(jsonDecode(selection))
+                            : SelectionModel(index: 0, length: 0));
+                      }
+                    } catch (e) {
+                      if (!kReleaseMode) {
+                        debugPrint(e.toString());
+                      }
+                    }
+                  }),
+
+              /// callback to notify once editor is completely loaded
+              DartCallback(
+                  name: 'EditorLoaded',
+                  callBack: (map) {
+                    _editorLoaded = true;
+                    if (mounted) {
+                      setState(() {});
+                    }
+                  }),
+            },
+            webSpecificParams: const WebSpecificParams(
+              printDebugInfo: false,
+            ),
+            mobileSpecificParams: const MobileSpecificParams(
+              androidEnableHybridComposition: true,
+            ),
           ),
-          mobileSpecificParams: const MobileSpecificParams(
-            androidEnableHybridComposition: true,
-          ),
-        ),
-        Visibility(
-          visible: !_editorLoaded,
-          child: widget.loadingBuilder != null
-              ? widget.loadingBuilder!(context)
-              : SizedBox(
-                  height: widget.minHeight,
-                  child: const Center(
-                    child: CircularProgressIndicator(
-                      strokeWidth: 0.3,
+          Visibility(
+            visible: !_editorLoaded,
+            child: widget.loadingBuilder != null
+                ? widget.loadingBuilder!(context)
+                : SizedBox(
+                    height: widget.minHeight,
+                    child: const Center(
+                      child: CircularProgressIndicator(
+                        strokeWidth: 0.3,
+                      ),
                     ),
                   ),
-                ),
-        ),
-      ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -1288,7 +1297,8 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
 
 ///[QuillEditorController] controller constructor to generate editor, toolbar state keys
 class QuillEditorController {
-  GlobalKey<QuillHtmlEditorState>? _editorKey;
+  //GlobalKey<QuillHtmlEditorState>? _editorKey;
+  final Map<String, GlobalKey<QuillHtmlEditorState>> _editorKeys = {};
   GlobalKey<ToolBarState>? _toolBarKey;
   StreamController<String>? _changeController;
   StreamController<String>? _editorLoadedController;
@@ -1303,8 +1313,6 @@ class QuillEditorController {
   /// and providing methods to interact with the editor's content and toolbar.
   ///
   QuillEditorController() {
-    _editorKey =
-        GlobalKey<QuillHtmlEditorState>(debugLabel: _getRandomString(15));
     _toolBarKey = GlobalKey<ToolBarState>(debugLabel: _getRandomString(15));
     _changeController = StreamController<String>();
     _editorLoadedController = StreamController<String>();
@@ -1321,12 +1329,20 @@ class QuillEditorController {
     }
   }
 
+  void addEditorKey(String key) {
+    _editorKeys[key] = GlobalKey<QuillHtmlEditorState>(debugLabel: key);
+  }
+
+  GlobalKey<QuillHtmlEditorState>? getEditorKey(String key) {
+    return _editorKeys[key];
+  }
+
   /// [getText] method is used to get the html string from the editor
   /// To avoid getting empty html tags, we are validating the html string
   /// if it doesn't contain any text, the method will return empty string instead of empty html tag
-  Future<String> getText() async {
+  Future<String> getText(String key) async {
     try {
-      String? text = await _editorKey?.currentState?._getHtmlFromEditor();
+      String? text = await _editorKeys[key]?.currentState?._getHtmlFromEditor();
       if (text == '<p><br></p>') {
         return text!.replaceAll('<p><br></p>', '');
       }
@@ -1342,9 +1358,10 @@ class QuillEditorController {
   /// as a [String]. This can be useful when you need to retrieve the editor's content
   /// without any formatting or HTML tags.
   ///
-  Future<String> getPlainText() async {
+  Future<String> getPlainText(String key) async {
     try {
-      String? text = await _editorKey?.currentState?._getPlainTextFromEditor();
+      String? text =
+          await _editorKeys[key]?.currentState?._getPlainTextFromEditor();
       if (text == null) {
         return "";
       } else {
@@ -1359,16 +1376,20 @@ class QuillEditorController {
   ///
   /// The [setText] method is used to set the HTML text content in the editor,
   /// overriding any existing text with the new content.
-  Future setText(String text) async {
-    return await _editorKey?.currentState?._setHtmlTextToEditor(htmlText: text);
+  Future setText(String text, String key) async {
+    return await _editorKeys[key]
+        ?.currentState
+        ?._setHtmlTextToEditor(htmlText: text);
   }
 
   /// Sets the Delta object in the editor.
   ///
   /// The [setDelta] method is used to set the Delta object in the editor,
   /// overriding any existing text with the new content.
-  Future setDelta(Map delta) async {
-    return await _editorKey?.currentState?._setDeltaToEditor(deltaMap: delta);
+  Future setDelta(Map delta, String key) async {
+    return await _editorKeys[key]
+        ?.currentState
+        ?._setDeltaToEditor(deltaMap: delta);
   }
 
   /// Retrieves the Delta map from the editor.
@@ -1376,8 +1397,8 @@ class QuillEditorController {
   /// The [getDelta] method is used to retrieve the Delta map from the editor
   /// as a [Map]. The Delta map represents the content and formatting of the editor.
   ///
-  Future<Map> getDelta() async {
-    var text = await _editorKey?.currentState?._getDeltaFromEditor();
+  Future<Map> getDelta(String key) async {
+    var text = await _editorKeys[key]?.currentState?._getDeltaFromEditor();
     return jsonDecode(text.toString());
   }
 
@@ -1386,8 +1407,8 @@ class QuillEditorController {
   /// The [focus] method is used to request focus for the editor,
   /// bringing it into the active input state.
   ///
-  Future focus() async {
-    return await _editorKey?.currentState?._requestFocus();
+  Future focus(String key) async {
+    return await _editorKeys[key]?.currentState?._requestFocus();
   }
 
   /// Inserts a table into the editor.
@@ -1395,8 +1416,9 @@ class QuillEditorController {
   /// The [insertTable] method is used to insert a table into the editor
   /// with the specified number of rows and columns.
   ///
-  Future insertTable(int row, int column) async {
-    return await _editorKey?.currentState
+  Future insertTable(int row, int column, String key) async {
+    return await _editorKeys[key]
+        ?.currentState
         ?._insertTableToEditor(row: row, column: column);
   }
 
@@ -1404,8 +1426,8 @@ class QuillEditorController {
   ///
   /// The [modifyTable] method is used to add or remove rows or columns of an existing table in the editor.
   ///
-  Future modifyTable(EditTableEnum type) async {
-    return await _editorKey?.currentState?._modifyTable(type);
+  Future modifyTable(EditTableEnum type, String key) async {
+    return await _editorKeys[key]?.currentState?._modifyTable(type);
   }
 
   /// Inserts HTML text into the editor.
@@ -1413,8 +1435,9 @@ class QuillEditorController {
   /// The [insertText] method is used to insert HTML text into the editor.
   /// If the [index] parameter is not specified, the text will be inserted at the current cursor position.
   ///
-  Future insertText(String text, {int? index}) async {
-    return await _editorKey?.currentState
+  Future insertText(String text, String key, {int? index}) async {
+    return await _editorKeys[key]
+        ?.currentState
         ?._insertHtmlTextToEditor(htmlText: text, index: index);
   }
 
@@ -1424,83 +1447,88 @@ class QuillEditorController {
   /// with the specified HTML text.
   ///
   /// custom format for replaced text will come in future release
-  Future replaceText(String text) async {
-    return await _editorKey?.currentState?._replaceText(text);
+  Future replaceText(String text, String key) async {
+    return await _editorKeys[key]?.currentState?._replaceText(text);
   }
 
   /// [getSelectedText] method to get the selected text from editor
-  Future getSelectedText() async {
-    return await _editorKey?.currentState?._getSelectedText();
+  Future getSelectedText(String key) async {
+    return await _editorKeys[key]?.currentState?._getSelectedText();
   }
 
   /// [getSelectedHtmlText] method to get the selected html text from editor
-  Future getSelectedHtmlText() async {
-    return await _editorKey?.currentState?._getSelectedHtmlText();
+  Future getSelectedHtmlText(String key) async {
+    return await _editorKeys[key]?.currentState?._getSelectedHtmlText();
   }
 
   /// [embedVideo] method is used to embed url of video to the editor
-  Future embedVideo(String url) async {
+  Future embedVideo(String url, String key) async {
     String? link = StringUtil.sanitizeVideoUrl(url);
     if (link == null) {
       return;
     }
-    return await _editorKey?.currentState?._embedVideo(videoUrl: link);
+    return await _editorKeys[key]?.currentState?._embedVideo(videoUrl: link);
   }
 
   /// [embedImage] method is used to insert image to the editor
-  Future embedImage(String imgSrc) async {
-    return await _editorKey?.currentState?._embedImage(imgSrc: imgSrc);
+  Future embedImage(String imgSrc, String key) async {
+    return await _editorKeys[key]?.currentState?._embedImage(imgSrc: imgSrc);
   }
 
   /// [enableEditor] method is used to enable/ disable the editor,
   /// while, we can enable or disable the editor directly by passing isEnabled to the widget,
   /// this is an additional function that can be used to do the same with the state key
   /// We can choose either of these ways to enable/disable
-  void enableEditor(bool enable) async {
+  void enableEditor(bool enable, String key) async {
     isEnable = enable;
-    await _editorKey?.currentState?._enableTextEditor(isEnabled: enable);
+    await _editorKeys[key]?.currentState?._enableTextEditor(isEnabled: enable);
   }
 
   @Deprecated(
       'Please use onFocusChanged method in the QuillHtmlEditor widget for focus')
 
   /// [hasFocus]checks if the editor has focus, returns the selection string length
-  Future<int> hasFocus() async {
-    return (await _editorKey?.currentState?._getSelectionCount()) ?? 0;
+  Future<int> hasFocus(String key) async {
+    return (await _editorKeys[key]?.currentState?._getSelectionCount()) ?? 0;
   }
 
   /// [getSelectionRange] to get the text selection range from editor
-  Future<SelectionModel> getSelectionRange() async {
-    var selection = await _editorKey?.currentState?._getSelectionRange();
+  Future<SelectionModel> getSelectionRange(String key) async {
+    var selection = await _editorKeys[key]?.currentState?._getSelectionRange();
     return selection != null
         ? SelectionModel.fromJson(jsonDecode(selection))
         : SelectionModel(index: 0, length: 0);
   }
 
   /// [setSelectionRange] to select the text in the editor by index
-  Future setSelectionRange(int index, int length) async {
-    return await _editorKey?.currentState?._setSelectionRange(index, length);
+  Future setSelectionRange(int index, int length, String key) async {
+    return await _editorKeys[key]
+        ?.currentState
+        ?._setSelectionRange(index, length);
   }
 
   ///  [clear] method is used to clear the editor
-  void clear() async {
-    await _editorKey?.currentState?._setHtmlTextToEditor(htmlText: '');
+  void clear(String key) async {
+    await _editorKeys[key]?.currentState?._setHtmlTextToEditor(htmlText: '');
   }
 
   /// [requestFocus] method is to request focus of the editor
-  void requestFocus() async {
-    await _editorKey?.currentState?._requestFocus();
+  void requestFocus(String key) async {
+    await _editorKeys[key]?.currentState?._requestFocus();
   }
 
   ///  [unFocus] method is to un focus the editor
-  void unFocus() async {
-    await _editorKey?.currentState?._unFocus();
+  void unFocus(String key) async {
+    await _editorKeys[key]?.currentState?._unFocus();
   }
 
   ///[setFormat]  sets the format to editor either by selection or by cursor position
-  void setFormat({required String format, required dynamic value}) async {
+  void setFormat(String key,
+      {required String format, required dynamic value}) async {
     debugPrint('setFormat called with format: $format, value: $value');
-    _editorKey?.currentState?._setFormat(format: format, value: value);
+    await _editorKeys[key]
+        ?.currentState
+        ?._setFormat(format: format, value: value);
   }
 
   ///[onTextChanged] method is used to listen to editor text changes
@@ -1556,18 +1584,18 @@ class QuillEditorController {
   }
 
   ///  [undo] method to undo the changes in editor
-  void undo() async {
-    await _editorKey?.currentState?._undo();
+  void undo(String key) async {
+    await _editorKeys[key]?.currentState?._undo();
   }
 
   ///  [redo] method to redo the changes in editor
-  void redo() async {
-    await _editorKey?.currentState?._redo();
+  void redo(String key) async {
+    await _editorKeys[key]?.currentState?._redo();
   }
 
   ///  [clearHistory] method to clear the history stack of editor
-  void clearHistory() async {
-    await _editorKey?.currentState?._clearHistory();
+  void clearHistory(String key) async {
+    await _editorKeys[key]?.currentState?._clearHistory();
   }
 }
 

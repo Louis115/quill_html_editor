@@ -23,6 +23,8 @@ class InputUrlWidget extends StatefulWidget {
   ///[iconWidget] icon for url picker
   final Widget iconWidget;
 
+  final String editorKey;
+
   ///[InputUrlWidget] constructor of input url widget to capture, video/hyperlink urls
   const InputUrlWidget(
       {super.key,
@@ -30,7 +32,8 @@ class InputUrlWidget extends StatefulWidget {
       required this.type,
       required this.controller,
       required this.isActive,
-      required this.iconWidget});
+      required this.iconWidget,
+      required this.editorKey});
 
   @override
   State<StatefulWidget> createState() {
@@ -70,7 +73,8 @@ class _InputUrlWidgetState extends State<InputUrlWidget> {
       SelectionModel? selectionMap;
       return ElTooltip(
         onTap: () async {
-          selectionMap = await widget.controller.getSelectionRange();
+          selectionMap =
+              await widget.controller.getSelectionRange(widget.editorKey);
           if (_toolTipKey.currentState != null) {
             _toolTipKey.currentState!.showOverlayOnTap();
           }
@@ -83,7 +87,9 @@ class _InputUrlWidgetState extends State<InputUrlWidget> {
     } else {
       return InkWell(
         onTap: () async {
-          await widget.controller.getSelectionRange().then((selectionModel) {
+          await widget.controller
+              .getSelectionRange(widget.editorKey)
+              .then((selectionModel) {
             showModalBottomSheet(
                 context: context,
                 isScrollControlled: true,
@@ -160,7 +166,8 @@ class _InputUrlWidgetState extends State<InputUrlWidget> {
                           if (selectionModel != null) {
                             widget.controller.setSelectionRange(
                                 selectionModel.index ?? 0,
-                                selectionModel.length ?? 0);
+                                selectionModel.length ?? 0,
+                                widget.editorKey);
                           }
 
                           Future.delayed(const Duration(milliseconds: 10))
