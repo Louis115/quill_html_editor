@@ -641,11 +641,11 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
         <link href="https://fonts.googleapis.com/css?family=$_encodedStyle:400,400i,700,700i" rel="stylesheet">
         <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1">    
         <link rel="stylesheet" type="text/css" href="packages/quill_html_editor/assets/scripts/quill_editor_styles.css">
-        <link rel="stylesheet" type="text/css" href="packages/quill_html_editor/assets/scripts/quill-better-table.css">
+
       
         <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
         <script src="packages/quill_html_editor/assets/scripts/image-resize.min.js"></script>
-        <script src="packages/quill_html_editor/assets/scripts/quill-better-table.min.js"></script>
+
 
         <!-- Include the Quill library --> 
         <script>
@@ -1028,20 +1028,7 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
           var quilleditor = new Quill('#editor', {
             modules: {
               toolbar: '#toolbar-container',
-              table:false,
-                          'better-table': {
-                      operationMenu: {
-                        items: {
-                          unmergeCells: {
-                            text: 'Another unmerge cells name'
-                          }
-                        },
-                        color: {
-                          colors: ['green', 'red', 'yellow', 'blue', 'white'],
-                          text: 'Background Colors:'
-                        }
-                      }
-                    },
+              table:true,
               keyboard:  ${widget.inputAction == InputAction.send ? '{bindings: bindings}' : '{}'},
               history: {
                 delay: 2000,
@@ -1058,7 +1045,7 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
             }
           });
 
-          const table = quilleditor.getModule('better-table');
+          const table = quilleditor.getModule('table');
  
          
          
