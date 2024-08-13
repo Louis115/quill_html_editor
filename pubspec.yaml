@@ -55,3 +55,9 @@ flutter:
     - packages/quill_html_editor/assets/scripts/quill_2.0.0_4_min.js
     - packages/quill_html_editor/assets/scripts/quill_editor_styles.css
     - packages/quill_html_editor/assets/scripts/image-resize.min.js
+    - packages/quill_html_editor/assets/scripts/quill-better-table.min.js
+    - packages/quill_html_editor/assets/scripts/quill-better-table.css
+
+    
+
+     

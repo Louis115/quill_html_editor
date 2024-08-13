@@ -5,6 +5,7 @@ import 'dart:math';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:quill_html_editor/quill_html_editor.dart';
@@ -26,41 +27,45 @@ class QuillHtmlEditor extends StatefulWidget {
   ///[QuillHtmlEditor] widget to display the quill editor,
   ///pass the controller to access the editor methods
   final ScrollController pageScrollController;
+  bool _firstSetText = true;
+  QuillHtmlEditor(
+      {Key? key,
+      this.text,
+      required this.controller,
+      required this.minHeight,
+      this.isEnabled = true,
+      this.onTextChanged,
+      this.backgroundColor = Colors.white,
+      this.hintText = 'input your text here',
+      this.onFocusChanged,
+      this.onEditorCreated,
+      this.onSelectionChanged,
+      this.padding = EdgeInsets.zero,
+      this.hintTextPadding = EdgeInsets.zero,
+      this.hintTextAlign = TextAlign.start,
+      this.onEditorResized,
+      this.onEditingComplete,
+      this.ensureVisible = false,
+      this.loadingBuilder,
+      this.inputAction = InputAction.newline,
+      this.autoFocus = false,
+      this.textStyle = const TextStyle(
+        fontStyle: FontStyle.normal,
+        fontSize: 16.0,
+        color: Colors.black,
+        fontWeight: FontWeight.normal,
+      ),
+      this.hintTextStyle = const TextStyle(
+        fontStyle: FontStyle.normal,
+        fontSize: 16.0,
+        color: Colors.black,
+        fontWeight: FontWeight.normal,
+      ),
+      required this.pageScrollController,
+      required this.htmlContent})
+      : super(key: controller._editorKey);
 
-  QuillHtmlEditor({
-    this.text,
-    required this.controller,
-    required this.minHeight,
-    this.isEnabled = true,
-    this.onTextChanged,
-    this.backgroundColor = Colors.white,
-    this.hintText = 'Start typing something amazing',
-    this.onFocusChanged,
-    this.onEditorCreated,
-    this.onSelectionChanged,
-    this.padding = EdgeInsets.zero,
-    this.hintTextPadding = EdgeInsets.zero,
-    this.hintTextAlign = TextAlign.start,
-    this.onEditorResized,
-    this.onEditingComplete,
-    this.ensureVisible = false,
-    this.loadingBuilder,
-    this.inputAction = InputAction.newline,
-    this.autoFocus = false,
-    this.textStyle = const TextStyle(
-      fontStyle: FontStyle.normal,
-      fontSize: 20.0,
-      color: Colors.black87,
-      fontWeight: FontWeight.normal,
-    ),
-    this.hintTextStyle = const TextStyle(
-      fontStyle: FontStyle.normal,
-      fontSize: 20.0,
-      color: Colors.black87,
-      fontWeight: FontWeight.normal,
-    ),
-    required this.pageScrollController,
-  }) : super(key: controller._editorKey);
+  String htmlContent;
 
   /// [text] to set initial text to the editor, please use text
   /// We can also use the setText method for the same
@@ -186,14 +191,32 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
 
   @override
   initState() {
+    super.initState();
+    debugPrint("editor init");
+
+    isEnabled = widget.isEnabled;
     _loadScripts = rootBundle.loadString(
         'packages/quill_html_editor/assets/scripts/quill_2.0.0_4_min.js');
     _fontFamily = widget.textStyle?.fontFamily ?? 'Roboto';
     _encodedStyle = Uri.encodeFull(_fontFamily);
-    isEnabled = widget.isEnabled;
     _currentHeight = widget.minHeight;
 
-    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await widget.controller.editorReady;
+      debugPrint("Post frame callback called");
+      widget._firstSetText = true;
+      widget.controller.onEditorLoaded(() async {
+        debugPrint(
+            "Editor loaded callback called, _firstSetText: ${widget._firstSetText}");
+        if (widget._firstSetText) {
+          await widget.controller.setText(widget.htmlContent);
+          debugPrint("Setting editor content: ${widget.htmlContent}");
+          widget._firstSetText = false;
+          debugPrint(
+              "_firstSetText set to false after setting content: ${widget._firstSetText}");
+        }
+      });
+    });
   }
 
   @override
@@ -220,16 +243,17 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
           });
         }
 
-        return widget.loadingBuilder != null
-            ? widget.loadingBuilder!(context)
-            : SizedBox(
-                height: widget.minHeight,
-                child: const Center(
-                  child: CircularProgressIndicator(
-                    strokeWidth: 0.3,
-                  ),
-                ),
-              );
+        if (widget.loadingBuilder != null) {
+          return widget.loadingBuilder!(context);
+        } else {
+          return SizedBox(
+            height: widget.minHeight,
+            child: const Center(
+              child: CircularProgressIndicator(
+                strokeWidth: 0.3,
+              ),
+            ),
+          );
         }
       },
     );
@@ -266,6 +290,12 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
               }
               widget.controller.markEditorReady(); // Mark editor as ready
               widget.controller._editorLoadedController?.add('');
+
+              // Trigger the editor loaded callback
+              if (widget.controller._editorLoadedController != null &&
+                  !widget.controller._editorLoadedController!.isClosed) {
+                widget.controller._editorLoadedController!.add('EditorLoaded');
+              }
             });
           },
           dartCallBacks: {
@@ -304,6 +334,7 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
                   setState(() {});
                 }
                 widget.controller.markEditorReady(); // Mark editor as ready
+                widget.controller._editorLoadedController?.add('EditorLoaded');
               },
             ),
             DartCallback(
@@ -342,31 +373,39 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
                 }),
             DartCallback(
                 name: 'OnTextChanged',
-                callBack: (map) {
-                  var tempText = "";
-                  if (tempText == map) {
-                    return;
-                  } else {
-                    tempText = map;
-                  }
-                  try {
-                    if (widget.controller._changeController != null) {
-                      String finalText = "";
-                      String parsedText =
-                          map; // No need to strip HTML tags here.
-                      if (parsedText.trim() == "") {
-                        finalText = "";
-                      } else {
-                        finalText = map;
-                      }
-                      if (widget.onTextChanged != null) {
-                        widget.onTextChanged!(finalText);
-                      }
-                      widget.controller._changeController!.add(finalText);
+                callBack: (map) async {
+                  await widget.controller.editorReady;
+                  Future.delayed(const Duration(milliseconds: 500));
+                  debugPrint(
+                      "on trigger > _firstSetText:${widget._firstSetText}");
+                  if (!widget._firstSetText) {
+                    debugPrint("OnTextChanged triggered");
+                    var tempText = "";
+                    if (tempText == map) {
+                      return;
+                    } else {
+                      tempText = map;
                     }
-                  } catch (e) {
-                    if (!kReleaseMode) {
-                      debugPrint(e.toString());
+                    try {
+                      if (widget.controller._changeController != null) {
+                        String finalText = "";
+                        String parsedText =
+                            map; // No need to strip HTML tags here.
+                        if (parsedText.trim() == "") {
+                          finalText = "";
+                        } else {
+                          finalText = map;
+                        }
+                        if (widget.onTextChanged != null) {
+                          widget.onTextChanged!(finalText);
+                          widget.htmlContent = finalText;
+                        }
+                        widget.controller._changeController!.add(finalText);
+                      }
+                    } catch (e) {
+                      if (!kReleaseMode) {
+                        debugPrint(e.toString());
+                      }
                     }
                   }
                 }),
@@ -438,16 +477,6 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
                     if (!kReleaseMode) {
                       debugPrint(e.toString());
                     }
-                  }
-                }),
-
-            /// callback to notify once editor is completely loaded
-            DartCallback(
-                name: 'EditorLoaded',
-                callBack: (map) {
-                  _editorLoaded = true;
-                  if (mounted) {
-                    setState(() {});
                   }
                 }),
           },
@@ -612,9 +641,11 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
         <link href="https://fonts.googleapis.com/css?family=$_encodedStyle:400,400i,700,700i" rel="stylesheet">
         <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1">    
         <link rel="stylesheet" type="text/css" href="packages/quill_html_editor/assets/scripts/quill_editor_styles.css">
-
+        <link rel="stylesheet" type="text/css" href="packages/quill_html_editor/assets/scripts/quill-better-table.css">
+      
         <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
         <script src="packages/quill_html_editor/assets/scripts/image-resize.min.js"></script>
+        <script src="packages/quill_html_editor/assets/scripts/quill-better-table.min.js"></script>
 
         <!-- Include the Quill library --> 
         <script>
@@ -633,8 +664,13 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
         margin:0px !important;
         background-color:${widget.backgroundColor.toRGBA()};
         color: ${widget.backgroundColor.toRGBA()};
-         
         }
+        .ql-editor p {
+        margin-top: 0pt;
+        margin-bottom: 0pt; /* This sets the space between paragraphs to 8 points */
+        line-height: 1.15;
+        }
+
         .ql-font-roboto {
            font-family: '$_fontFamily', sans-serif;
           }
@@ -648,7 +684,7 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
           position: center;
           left:0px;
           text-align: ${StringUtil.getCssTextAlign(widget.hintTextAlign)};
-          font-size: ${widget.hintTextStyle?.fontSize ?? '14'}px;
+          font-size: ${widget.hintTextStyle?.fontSize ?? '16'}px;
           color:${(widget.hintTextStyle?.color ?? Colors.black).toRGBA()};
           background-color:${widget.backgroundColor.toRGBA()};
           font-style: ${StringUtil.getCssFontStyle(widget.hintTextStyle?.fontStyle)};
@@ -665,7 +701,7 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
           width:100%;
           border:none;
           font-style: ${StringUtil.getCssFontStyle(widget.textStyle?.fontStyle)};
-          font-size: ${widget.textStyle?.fontSize ?? '14'}px;
+          font-size: ${widget.textStyle?.fontSize ?? '16'}px;
           color:${(widget.textStyle!.color ?? Colors.black).toRGBA()};
           background-color:${widget.backgroundColor.toRGBA()};
           font-weight: ${StringUtil.getCssFontWeight(widget.textStyle?.fontWeight)};
@@ -674,10 +710,9 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
           padding-top:${widget.padding?.top ?? '0'}px;
           padding-bottom:${widget.padding?.bottom ?? '0'}px;
           min-height:100%;
-        
           contenteditable: true !important;
           data-gramm: false !important;
-         
+   
         }
         .ql-editor { 
          font-family: "$_fontFamily", sans-serif !important;
@@ -718,6 +753,9 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
           } 
         </style>
    
+
+
+
         </head>
         <body>
 
@@ -984,11 +1022,26 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
           Quill.register(Breaker);
 
           Quill.register('modules/imageResize', window.ImageResize.default);
+ 
+
 
           var quilleditor = new Quill('#editor', {
             modules: {
               toolbar: '#toolbar-container',
-              table: true,
+              table:false,
+                          'better-table': {
+                      operationMenu: {
+                        items: {
+                          unmergeCells: {
+                            text: 'Another unmerge cells name'
+                          }
+                        },
+                        color: {
+                          colors: ['green', 'red', 'yellow', 'blue', 'white'],
+                          text: 'Background Colors:'
+                        }
+                      }
+                    },
               keyboard:  ${widget.inputAction == InputAction.send ? '{bindings: bindings}' : '{}'},
               history: {
                 delay: 2000,
@@ -1005,7 +1058,10 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
             }
           });
 
-          const table = quilleditor.getModule('table');
+          const table = quilleditor.getModule('better-table');
+ 
+         
+         
           quilleditor.enable($isEnabled);
         
           applyGoogleKeyboardWorkaround(quilleditor);
@@ -1200,10 +1256,11 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
             return '';
           }
 
-          function insertTable(row,column) {
+           function insertTable(row,column) {
             table.insertTable(row, column);
             return '';
           }
+
           
           function modifyTable(type) {
             if(type =="insertRowAbove"){
@@ -1278,6 +1335,50 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
             }
             return '';
           }
+
+          
+
+  function logTableClickAndChangeBorderColor() {
+  // Get the editor container
+  const editorContainer = document.querySelector('#editor');
+
+  // Add an event listener for click events in the editor
+  editorContainer.addEventListener('click', function(event) {
+    // Check if the clicked element is a table, row, or cell
+    let target = event.target;
+
+    // Traverse up the DOM to find the table element if clicking inside a cell or row
+    while (target && target !== editorContainer) {
+      if (target.tagName === 'TD') {
+        console.log('Table cell clicked:', target);
+
+        // Change the border color of the clicked cell to green
+        target.style.borderColor = 'green';
+        target.style.borderWidth = '2px';
+        target.style.borderStyle = 'solid';
+
+        // Set the width of the clicked cell to 200px
+        target.style.width = '200px';
+
+        break;
+      } else if (target.tagName === 'TR') {
+        console.log('Table row clicked:', target);
+        break;
+      } else if (target.tagName === 'TABLE') {
+        console.log('Table clicked:', target);
+        break;
+      }
+      target = target.parentElement;
+    }
+  });
+}
+
+// Initialize the function after the editor is created
+logTableClickAndChangeBorderColor();
+
+
+
+
         </script>
         </body>
         </html>
