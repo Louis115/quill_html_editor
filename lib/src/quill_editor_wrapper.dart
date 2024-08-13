@@ -220,17 +220,16 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
           });
         }
 
-        if (widget.loadingBuilder != null) {
-          return widget.loadingBuilder!(context);
-        } else {
-          return SizedBox(
-            height: widget.minHeight,
-            child: const Center(
-              child: CircularProgressIndicator(
-                strokeWidth: 0.3,
-              ),
-            ),
-          );
+        return widget.loadingBuilder != null
+            ? widget.loadingBuilder!(context)
+            : SizedBox(
+                height: widget.minHeight,
+                child: const Center(
+                  child: CircularProgressIndicator(
+                    strokeWidth: 0.3,
+                  ),
+                ),
+              );
         }
       },
     );
