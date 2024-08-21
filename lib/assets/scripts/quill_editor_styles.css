@@ -3,7 +3,7 @@
 	font-family: Helvetica, Arial, sans-serif;
 	font-size: 13px;
 	height: 100%;
-	margin: 0;
+	margin: 0;	
 	position: relative
 }
 
@@ -386,11 +386,18 @@
 
 .ql-editor table {
 	table-layout: fixed;
-	width: 100%
+	table-layout: fixed;
+	/* width: 100% */  
 }
 
 .ql-editor table td {
-	outline: 0
+	outline: 0;
+	width: 100px;
+	word-wrap: break-word; /* Ensures long words break and wrap */
+	word-break: break-word; /* Breaks long words that overflow */
+	white-space: normal; /* Ensures content wraps within the cell */
+	overflow: hidden; /* Prevents overflow */
+	vertical-align: top; 
 }
 
 .ql-editor .ql-code-block-container {

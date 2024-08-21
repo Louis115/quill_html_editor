@@ -1343,6 +1343,8 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
         target.style.borderColor = 'green';
         target.style.borderWidth = '2px';
         target.style.borderStyle = 'solid';
+        target.style.textAlign = 'center';
+        
 
         // Set the width of the clicked cell to 200px
         target.style.width = '200px';
