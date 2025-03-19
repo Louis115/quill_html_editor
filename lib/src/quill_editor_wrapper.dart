@@ -1,13 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
-
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/widgets.dart';
 import 'package:quill_html_editor/quill_html_editor.dart';
 import 'package:quill_html_editor/src/utils/hex_color.dart';
 import 'package:quill_html_editor/src/utils/string_util.dart';
@@ -51,13 +47,14 @@ class QuillHtmlEditor extends StatefulWidget {
       this.autoFocus = false,
       this.textStyle = const TextStyle(
         fontStyle: FontStyle.normal,
-        fontSize: 16.0,
+        fontSize: 20.0,
         color: Colors.black,
         fontWeight: FontWeight.normal,
       ),
+      //! editor hint text
       this.hintTextStyle = const TextStyle(
         fontStyle: FontStyle.normal,
-        fontSize: 16.0,
+        fontSize: 20.0,
         color: Colors.black,
         fontWeight: FontWeight.normal,
       ),
@@ -65,7 +62,7 @@ class QuillHtmlEditor extends StatefulWidget {
       required this.htmlContent})
       : super(key: controller._editorKey);
 
-  String htmlContent;
+  ValueNotifier<String> htmlContent;
 
   /// [text] to set initial text to the editor, please use text
   /// We can also use the setText method for the same
@@ -195,25 +192,23 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
     debugPrint("editor init");
 
     isEnabled = widget.isEnabled;
-    _loadScripts = rootBundle.loadString(
-        'packages/quill_html_editor/assets/scripts/quill_2.0.0_4_min.js');
+    _loadScripts = rootBundle.loadString('packages/quill_html_editor/assets/scripts/quill_2.0.0_4_min.js');
     _fontFamily = widget.textStyle?.fontFamily ?? 'Roboto';
     _encodedStyle = Uri.encodeFull(_fontFamily);
     _currentHeight = widget.minHeight;
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await widget.controller.editorReady;
-      debugPrint("Post frame callback called");
+      // debugPrint("Post frame callback called");
       widget._firstSetText = true;
       widget.controller.onEditorLoaded(() async {
-        debugPrint(
-            "Editor loaded callback called, _firstSetText: ${widget._firstSetText}");
+        // debugPrint(
+        //     "Editor loaded callback called, _firstSetText: ${widget._firstSetText}");
         if (widget._firstSetText) {
-          await widget.controller.setText(widget.htmlContent);
-          debugPrint("Setting editor content: ${widget.htmlContent}");
+          await widget.controller.setText(widget.htmlContent.value);
+          // debugPrint("Setting editor content: ${widget.htmlContent}");
           widget._firstSetText = false;
-          debugPrint(
-              "_firstSetText set to false after setting content: ${widget._firstSetText}");
+          debugPrint("_firstSetText set to false after setting content: ${widget._firstSetText}");
         }
       });
     });
@@ -222,6 +217,7 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
   @override
   void dispose() {
     _webviewController.dispose();
+
     super.dispose();
   }
 
@@ -259,8 +255,7 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
     );
   }
 
-  Widget _buildEditorView(
-      {required BuildContext context, required double width}) {
+  Widget _buildEditorView({required BuildContext context, required double width}) {
     _initialContent = _getQuillPage(width: width);
     return Stack(
       children: [
@@ -306,19 +301,13 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
                 try {
                   double scrollDelta = double.tryParse(data.toString()) ?? 0.0;
                   // print('Scrolling in WebViewX area with delta: $scrollDelta');
-                  double newPosition =
-                      widget.pageScrollController.position.pixels + scrollDelta;
-                  if (newPosition > 0 &&
-                      newPosition <
-                          widget
-                              .pageScrollController.position.maxScrollExtent) {
+                  double newPosition = widget.pageScrollController.position.pixels + scrollDelta;
+                  if (newPosition > 0 && newPosition < widget.pageScrollController.position.maxScrollExtent) {
                     widget.pageScrollController.jumpTo(newPosition);
                   } else if (newPosition <= 0) {
                     widget.pageScrollController.jumpTo(0);
-                  } else if (newPosition >=
-                      widget.pageScrollController.position.maxScrollExtent) {
-                    widget.pageScrollController.jumpTo(
-                        widget.pageScrollController.position.maxScrollExtent);
+                  } else if (newPosition >= widget.pageScrollController.position.maxScrollExtent) {
+                    widget.pageScrollController.jumpTo(widget.pageScrollController.position.maxScrollExtent);
                   }
                 } catch (e) {
                   print('Error parsing scroll delta: $e');
@@ -344,8 +333,7 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
                     return;
                   }
                   try {
-                    _currentHeight =
-                        double.tryParse(height.toString()) ?? widget.minHeight;
+                    _currentHeight = double.tryParse(height.toString()) ?? widget.minHeight;
                   } catch (e) {
                     _currentHeight = widget.minHeight;
                   } finally {
@@ -362,8 +350,7 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
                 callBack: (map) {
                   try {
                     if (widget.controller._toolBarKey != null) {
-                      widget.controller._toolBarKey!.currentState
-                          ?.updateToolBarFormat(jsonDecode(map));
+                      widget.controller._toolBarKey!.currentState?.updateToolBarFormat(jsonDecode(map));
                     }
                   } catch (e) {
                     if (!kReleaseMode) {
@@ -376,10 +363,10 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
                 callBack: (map) async {
                   await widget.controller.editorReady;
                   Future.delayed(const Duration(milliseconds: 500));
-                  debugPrint(
-                      "on trigger > _firstSetText:${widget._firstSetText}");
+                  // debugPrint(
+                  //     "on trigger > _firstSetText:${widget._firstSetText}");
                   if (!widget._firstSetText) {
-                    debugPrint("OnTextChanged triggered");
+                    // debugPrint("OnTextChanged triggered");
                     var tempText = "";
                     if (tempText == map) {
                       return;
@@ -389,8 +376,7 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
                     try {
                       if (widget.controller._changeController != null) {
                         String finalText = "";
-                        String parsedText =
-                            map; // No need to strip HTML tags here.
+                        String parsedText = map; // No need to strip HTML tags here.
                         if (parsedText.trim() == "") {
                           finalText = "";
                         } else {
@@ -398,7 +384,7 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
                         }
                         if (widget.onTextChanged != null) {
                           widget.onTextChanged!(finalText);
-                          widget.htmlContent = finalText;
+                          widget.htmlContent.value = finalText;
                         }
                         widget.controller._changeController!.add(finalText);
                       }
@@ -420,11 +406,9 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
 
                   /// scrolls to the end of the text area, to keep the focus visible
                   if (widget.ensureVisible == true && _hasFocus) {
-                    Scrollable.of(context).position.ensureVisible(
-                        context.findRenderObject()!,
+                    Scrollable.of(context).position.ensureVisible(context.findRenderObject()!,
                         duration: const Duration(milliseconds: 300),
-                        alignmentPolicy:
-                            ScrollPositionAlignmentPolicy.keepVisibleAtEnd,
+                        alignmentPolicy: ScrollPositionAlignmentPolicy.keepVisibleAtEnd,
                         curve: Curves.fastLinearToSlowEaseIn);
                   }
                 }),
@@ -440,8 +424,7 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
                   try {
                     if (widget.controller._changeController != null) {
                       String finalText = "";
-                      String parsedText =
-                          QuillEditorController._stripHtmlIfNeeded(map);
+                      String parsedText = QuillEditorController._stripHtmlIfNeeded(map);
                       if (parsedText.trim() == "") {
                         finalText = "";
                       } else {
@@ -531,8 +514,7 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
 
   /// a private method to check if editor has focus
   Future<dynamic> _setSelectionRange(int index, int length) async {
-    return await _webviewController
-        .callJsMethod("setSelection", [index, length]);
+    return await _webviewController.callJsMethod("setSelection", [index, length]);
   }
 
   /// a private method to set the Html text to the editor
@@ -542,8 +524,7 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
 
   /// a private method to set the Delta  text to the editor
   Future _setDeltaToEditor({required Map<dynamic, dynamic> deltaMap}) async {
-    return await _webviewController
-        .callJsMethod("setDeltaContent", [jsonEncode(deltaMap)]);
+    return await _webviewController.callJsMethod("setDeltaContent", [jsonEncode(deltaMap)]);
   }
 
   /// a private method to request focus to the editor
@@ -558,8 +539,7 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
 
   /// a private method to insert the Html text to the editor
   Future _insertHtmlTextToEditor({required String htmlText, int? index}) async {
-    return await _webviewController
-        .callJsMethod("insertHtmlText", [htmlText, index]);
+    return await _webviewController.callJsMethod("insertHtmlText", [htmlText, index]);
   }
 
   /// a private method to embed the video to the editor
@@ -580,9 +560,8 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
   /// a private method to enable/disable the editor
   Future _setFormat({required String format, required dynamic value}) async {
     try {
-      debugPrint('Calling JS setFormat with format: $format, value: $value');
-      return await _webviewController
-          .callJsMethod("setFormat", [format, value]);
+      // debugPrint('Calling JS setFormat with format: $format, value: $value');
+      return await _webviewController.callJsMethod("setFormat", [format, value]);
     } catch (e) {
       debugPrint('Error in setFormat: $e');
     }
@@ -602,8 +581,7 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
   Future _replaceText(
     String replaceText,
   ) async {
-    return await _webviewController
-        .callJsMethod("replaceSelection", [replaceText]);
+    return await _webviewController.callJsMethod("replaceSelection", [replaceText]);
   }
 
   /// a private method to get the selected text from editor
@@ -640,16 +618,17 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
         <head>
         <link href="https://fonts.googleapis.com/css?family=$_encodedStyle:400,400i,700,700i" rel="stylesheet">
         <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1">    
-        <link rel="stylesheet" type="text/css" href="packages/quill_html_editor/assets/scripts/quill_editor_styles.css">
+        <link rel="stylesheet" type="text/css" href="assets/packages/quill_html_editor/assets/scripts/quill_editor_styles.css">
 
       
         <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
-        <script src="packages/quill_html_editor/assets/scripts/image-resize.min.js"></script>
+        <script src="assets/packages/quill_html_editor/assets/scripts/image-resize.min.js"></script>
 
 
         <!-- Include the Quill library --> 
         <script>
         $_quillJsScript
+        console.log("quill editor joined");
         </script>
         <style>
         /*!
@@ -668,7 +647,7 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
         .ql-editor p {
         margin-top: 0pt;
         margin-bottom: 0pt; /* This sets the space between paragraphs to 8 points */
-        line-height: 1.15;
+        // line-height: 1.15;
         }
 
         .ql-font-roboto {
@@ -684,7 +663,7 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
           position: center;
           left:0px;
           text-align: ${StringUtil.getCssTextAlign(widget.hintTextAlign)};
-          font-size: ${widget.hintTextStyle?.fontSize ?? '16'}px;
+          font-size: ${widget.hintTextStyle?.fontSize ?? '20'}px;
           color:${(widget.hintTextStyle?.color ?? Colors.black).toRGBA()};
           background-color:${widget.backgroundColor.toRGBA()};
           font-style: ${StringUtil.getCssFontStyle(widget.hintTextStyle?.fontStyle)};
@@ -701,7 +680,7 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
           width:100%;
           border:none;
           font-style: ${StringUtil.getCssFontStyle(widget.textStyle?.fontStyle)};
-          font-size: ${widget.textStyle?.fontSize ?? '16'}px;
+          font-size: ${widget.textStyle?.fontSize ?? '20'}px;
           color:${(widget.textStyle!.color ?? Colors.black).toRGBA()};
           background-color:${widget.backgroundColor.toRGBA()};
           font-weight: ${StringUtil.getCssFontWeight(widget.textStyle?.fontWeight)};
@@ -794,19 +773,27 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
           document.addEventListener("mouseup", handleTextSelectionEnd);
           document.addEventListener("mousemove", handleMouseMove);
          
+          document.addEventListener('keydown', function(event) {
+              // Check if the Control key and the '1' key are pressed together
+              if (event.ctrlKey && event.key === '1') {
+                  console.log('hahaha');
+              }
+          });
 
          
 
 
          </script> 
         <!-- Create the toolbar container -->
+
         <div id="scrolling-container" onwheel="myFunction(event)">
         <div id="toolbar-container"></div>
         
         <!-- Create the editor container -->
         <div style="position:relative;margin-top:0em;">
         <div id="editorcontainer" style= "min-height:${widget.minHeight}px;margin-top:0em;">
-        <div id="editor" style="min-height:${widget.minHeight}px; width:100%;"></div>
+        <div id="editor" style="min-height:${widget.minHeight}px; width:100%;">
+        </div>
         </div>
         </div> 
         </div>
@@ -991,27 +978,29 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
           ResponsibilityBlot.tagName = 'responsibility';
           Quill.register(ResponsibilityBlot);
           
-          var bindings = {
-            linebreak: {
-              key: 13,
-              shiftKey: true,
-              handler: function(range) {
-                this.quill.insertEmbed(range.index, 'breaker', true, Quill.sources.USER);
-                this.quill.setSelection(range.index + 1, Quill.sources.SILENT);
-                return false;
-              }
-            },
-            enter: {
-              key: 'Enter',
-              handler: () => {
-                 if($kIsWeb) {
-                  OnEditingCompleted(quilleditor.root.innerHTML);
-                  } else {
-                  OnEditingCompleted.postMessage(quilleditor.root.innerHTML);
+                  var bindings = {
+                  linebreak: {
+                      key: 13,
+                      shiftKey: true,
+                      handler: function(range) {
+                        console.log("louis1");
+                          this.quill.insertEmbed(range.index, 'breaker', true, Quill.sources.USER);
+                          this.quill.setSelection(range.index + 1, Quill.sources.SILENT);
+                          return false;
+                      }
+                  },
+              
+                  enter: {
+                      key: 'Enter',
+                      handler: () => {
+                         if($kIsWeb) {
+                          OnEditingCompleted(quilleditor.root.innerHTML);
+                          } else {
+                          OnEditingCompleted.postMessage(quilleditor.root.innerHTML);
+                          }
+                      }
                   }
-              }
-            }
-          };
+              };
           
           let Embed = Quill.import('blots/embed');
           
@@ -1024,7 +1013,8 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
           Quill.register('modules/imageResize', window.ImageResize.default);
  
 
-
+ 
+        
           var quilleditor = new Quill('#editor', {
             modules: {
               toolbar: '#toolbar-container',
@@ -1289,6 +1279,7 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
           }
           
           function embedImage(img) {
+        
             var range = quilleditor.getSelection(true);
             if(range) {
               quilleditor.insertEmbed(range.index, 'image', img);
@@ -1343,7 +1334,7 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
         target.style.borderColor = 'green';
         target.style.borderWidth = '2px';
         target.style.borderStyle = 'solid';
-        target.style.textAlign = 'center';
+        // target.style.textAlign = 'center';
         
 
         // Set the width of the clicked cell to 200px
@@ -1363,7 +1354,7 @@ class QuillHtmlEditorState extends State<QuillHtmlEditor> {
 }
 
 // Initialize the function after the editor is created
-logTableClickAndChangeBorderColor();
+// logTableClickAndChangeBorderColor();
 
 
 
@@ -1392,8 +1383,7 @@ class QuillEditorController {
   /// and providing methods to interact with the editor's content and toolbar.
   ///
   QuillEditorController() {
-    _editorKey =
-        GlobalKey<QuillHtmlEditorState>(debugLabel: _getRandomString(15));
+    _editorKey = GlobalKey<QuillHtmlEditorState>(debugLabel: _getRandomString(15));
     _toolBarKey = GlobalKey<ToolBarState>(debugLabel: _getRandomString(15));
     _changeController = StreamController<String>();
     _editorLoadedController = StreamController<String>();
@@ -1485,8 +1475,7 @@ class QuillEditorController {
   /// with the specified number of rows and columns.
   ///
   Future insertTable(int row, int column) async {
-    return await _editorKey?.currentState
-        ?._insertTableToEditor(row: row, column: column);
+    return await _editorKey?.currentState?._insertTableToEditor(row: row, column: column);
   }
 
   /// Modifies an existing table in the editor.
@@ -1503,8 +1492,7 @@ class QuillEditorController {
   /// If the [index] parameter is not specified, the text will be inserted at the current cursor position.
   ///
   Future insertText(String text, {int? index}) async {
-    return await _editorKey?.currentState
-        ?._insertHtmlTextToEditor(htmlText: text, index: index);
+    return await _editorKey?.currentState?._insertHtmlTextToEditor(htmlText: text, index: index);
   }
 
   /// Replaces the selected text in the editor.
@@ -1550,8 +1538,7 @@ class QuillEditorController {
     await _editorKey?.currentState?._enableTextEditor(isEnabled: enable);
   }
 
-  @Deprecated(
-      'Please use onFocusChanged method in the QuillHtmlEditor widget for focus')
+  @Deprecated('Please use onFocusChanged method in the QuillHtmlEditor widget for focus')
 
   /// [hasFocus]checks if the editor has focus, returns the selection string length
   Future<int> hasFocus() async {
@@ -1561,9 +1548,7 @@ class QuillEditorController {
   /// [getSelectionRange] to get the text selection range from editor
   Future<SelectionModel> getSelectionRange() async {
     var selection = await _editorKey?.currentState?._getSelectionRange();
-    return selection != null
-        ? SelectionModel.fromJson(jsonDecode(selection))
-        : SelectionModel(index: 0, length: 0);
+    return selection != null ? SelectionModel.fromJson(jsonDecode(selection)) : SelectionModel(index: 0, length: 0);
   }
 
   /// [setSelectionRange] to select the text in the editor by index
@@ -1588,15 +1573,14 @@ class QuillEditorController {
 
   ///[setFormat]  sets the format to editor either by selection or by cursor position
   void setFormat({required String format, required dynamic value}) async {
-    debugPrint('setFormat called with format: $format, value: $value');
+    // debugPrint('setFormat called with format: $format, value: $value');
     _editorKey?.currentState?._setFormat(format: format, value: value);
   }
 
   ///[onTextChanged] method is used to listen to editor text changes
   void onTextChanged(Function(String) data) {
     try {
-      if (_changeController != null &&
-          _changeController?.hasListener == false) {
+      if (_changeController != null && _changeController?.hasListener == false) {
         _changeController?.stream.listen((event) {
           data(event);
         });
@@ -1617,8 +1601,7 @@ class QuillEditorController {
   ///
   void onEditorLoaded(VoidCallback callback) {
     try {
-      if (_editorLoadedController != null &&
-          _editorLoadedController?.hasListener == false) {
+      if (_editorLoadedController != null && _editorLoadedController?.hasListener == false) {
         _editorLoadedController?.stream.listen((event) {
           callback();
         });
@@ -1687,5 +1670,5 @@ void _printWrapper(bool showPrint, String text) {
 const _chars = 'AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890';
 Random _rnd = Random();
 
-String _getRandomString(int length) => String.fromCharCodes(Iterable.generate(
-    length, (_) => _chars.codeUnitAt(_rnd.nextInt(_chars.length))));
+String _getRandomString(int length) =>
+    String.fromCharCodes(Iterable.generate(length, (_) => _chars.codeUnitAt(_rnd.nextInt(_chars.length))));

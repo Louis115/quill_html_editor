@@ -16,7 +16,7 @@ dependencies:
   flutter_web_plugins:
     sdk: flutter
   ##### For image picker widget
-  file_picker: ^6.1.1
+  file_picker: 8.0.3
   ##### For webveiwx widget
   http: ^1.1.2
   path: ^1.9.0
@@ -26,6 +26,7 @@ dependencies:
   webview_flutter_android: ^3.13.2
   webview_flutter_platform_interface: ^2.9.0
   webview_flutter_wkwebview: ^3.10.2
+  firebase_storage: ^12.2.0
 
 dev_dependencies:
   flutter_lints: ^2.0.0
